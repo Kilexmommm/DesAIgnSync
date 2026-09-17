@@ -11,3 +11,5 @@ npm run build -w @desaignsync/extension
 ```
 
 Ver `docs/backlog/DS-002.md` y `docs/adr/ADR-002-*`.
+
+Trazabilidad: DS-002 (Extension MV3 Side Panel).
