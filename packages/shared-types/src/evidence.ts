@@ -92,3 +92,26 @@ export interface EvidenceRef {
   jsonPointer?: string;
   meta?: { [key: string]: JsonValue };
 }
+
+/**
+ * A visually selected element on the inspected page (DS-012).
+ * Selection is read-only: it never modifies the app, it only reports what the user pointed at.
+ * The payload is untrusted page data and must be validated before use.
+ */
+export interface ElementTarget {
+  schemaVersion: number;
+  /** Best-effort CSS selector for re-identification and debugging. */
+  selector: string;
+  tagName: string;
+  rect: Rectangle;
+  capturedAt: string;
+  tabId?: number;
+  pageId?: number;
+  url?: string;
+  /** Chrome accessibility uid when the snapshot is available. */
+  uid?: string;
+  role?: string;
+  accessibleName?: string;
+  textHint?: string;
+  viewport?: Dimensions;
+}

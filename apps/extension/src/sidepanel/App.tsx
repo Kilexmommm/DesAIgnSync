@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react';
 
+import { elementTargetLabel } from '@desaignsync/core';
 import type { McpServerRuntimeStatus } from '@desaignsync/shared-types';
 
+import { useElementPicker } from './useElementPicker.js';
 import { useHostConnection, type HostConnectionSnapshot } from './useHostConnection.js';
 
 const STATE_LABEL: Record<HostConnectionSnapshot['state'], string> = {
@@ -20,6 +22,7 @@ const STATE_LABEL: Record<HostConnectionSnapshot['state'], string> = {
  */
 export function App(): React.JSX.Element {
   const { snapshot, busy, pair, refresh, unpair, updateHostUrl, testServer } = useHostConnection();
+  const { picking, target, error: pickError, start: startPick, clear: clearPick } = useElementPicker();
   const [hostUrlInput, setHostUrlInput] = useState('');
   const [pairingCode, setPairingCode] = useState('');
   const [actionError, setActionError] = useState<string | undefined>(undefined);
@@ -129,6 +132,50 @@ export function App(): React.JSX.Element {
       </section>
 
       <section className="ds-card">
+        <h2>Selected element</h2>
+        {target ? (
+          <>
+            <div className="ds-row">
+              <span>{elementTargetLabel(target)}</span>
+              <span className="ds-badge ds-badge--ready">target</span>
+            </div>
+            <div className="ds-row">
+              <span>Selector</span>
+              <span className="ds-muted">{target.selector}</span>
+            </div>
+            <div className="ds-row">
+              <span>Box</span>
+              <span className="ds-muted">
+                {Math.round(target.rect.width)}×{Math.round(target.rect.height)} px
+                {target.role ? ` · role=${target.role}` : ''}
+              </span>
+            </div>
+          </>
+        ) : (
+          <p className="ds-muted">No element selected yet.</p>
+        )}
+
+        <div className="ds-row">
+          <button
+            className="ds-button"
+            type="button"
+            disabled={picking}
+            onClick={() => void startPick()}
+          >
+            {picking ? 'Pick in page...' : 'Select element'}
+          </button>
+          <button className="ds-button" type="button" disabled={!target} onClick={clearPick}>
+            Clear
+          </button>
+        </div>
+        <p className="ds-note">
+          Read-only: the page is never modified. Evidence collection, matching and the checklist for
+          this selection arrive with DS-018.
+        </p>
+        {pickError ? <p className="ds-note ds-badge--error">{pickError}</p> : null}
+      </section>
+
+      <section className="ds-card">
         <h2>MCP servers</h2>
         {snapshot.servers.length === 0 ? (
           <p className="ds-muted">No MCP servers reported by the host.</p>
@@ -147,8 +194,8 @@ export function App(): React.JSX.Element {
       <section className="ds-card">
         <h2>Coming in later waves</h2>
         <ul className="ds-upcoming">
-          <li>Select element + evidence (DS-012, DS-018)</li>
-          <li>Matching with confidence + deterministic rules (DS-014, DS-015)</li>
+          <li>Evidence, matching and checklist for the selected element (DS-018)</li>
+          <li>Deterministic rules with tolerances (DS-014, DS-015)</li>
           <li>Auditable checklist and export (DS-020)</li>
           <li>Page audit (DS-019) and Ask AI (DS-021)</li>
         </ul>

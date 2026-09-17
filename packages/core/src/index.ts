@@ -63,3 +63,10 @@ export {
   type NormalizeEvidenceOptions,
   type RawElementSource
 } from './evidence/normalizeElementEvidence.js';
+
+export {
+  elementTargetLabel,
+  elementTargetToEvidenceSeed,
+  normalizeElementTarget,
+  type ElementTargetValidation
+} from './evidence/elementTarget.js';
