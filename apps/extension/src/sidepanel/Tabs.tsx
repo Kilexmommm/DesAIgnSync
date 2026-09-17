@@ -1,4 +1,4 @@
-export type TabId = 'setup' | 'review' | 'mcp' | 'llm' | 'profiles';
+export type TabId = 'review' | 'mcp' | 'llm' | 'profiles';
 
 export interface TabDefinition {
   id: TabId;
