@@ -36,3 +36,20 @@ export {
 export { SessionStore, generatePairingCode, type SessionRecord } from './security/sessionStore.js';
 export { evaluateOrigin, type OriginPolicy, type OriginDecision } from './security/originPolicy.js';
 export { redactString, redactUrl, redactValue, REDACTED } from './security/redaction.js';
+export {
+  createSecretStore,
+  createEncryptedFileStore,
+  createOsKeychainStore,
+  assertSecretRef,
+  type SecretStore,
+  type SecretBackendKind
+} from './security/secretStoreFactory.js';
+export {
+  LlmProviderAdapter,
+  toHostErrorBody,
+  type LlmCompleteRequest,
+  type LlmCompletion,
+  type LlmMessage,
+  type LlmOperationResult,
+  type LlmRuntimeOptions
+} from './llm/llmProviderAdapter.js';
