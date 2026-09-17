@@ -131,3 +131,34 @@ export {
   type ReconciliationConflict,
   type ReconciliationResult
 } from './prompts/promptBundle.js';
+
+export {
+  BUILT_IN_PROFILES,
+  MAX_CANDIDATES,
+  MIN_CANDIDATES,
+  PROFILE_CATALOG_VERSION,
+  PROFILE_TEMPLATES,
+  SEVERITY_VALUES,
+  TIER_EXPOSURE,
+  TOLERANCE_STRATEGIES,
+  applyTier,
+  createProfileFromTemplate,
+  duplicateProfile,
+  getProfileTemplate,
+  isCheckId,
+  isProfileTemplateId,
+  profileRef,
+  removeProfileFromList,
+  renameProfile,
+  resetProfileToDefaults,
+  summarizeProfile,
+  updateChecks,
+  updateMatching,
+  validateProfile,
+  type CreateProfileInput,
+  type ProfileRef,
+  type ProfileSummary,
+  type ProfileTemplate,
+  type ProfileValidation,
+  type TierExposure
+} from './profiles/profileCatalog.js';
