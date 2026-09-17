@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "description": "MCP-first Design System compliance auditor. Audits a web app read-only against the Design System exposed through MCP.",
   "minimum_chrome_version": "116",
-  "permissions": ["sidePanel", "storage", "tabs", "activeTab"],
+  "permissions": ["sidePanel", "storage", "tabs", "activeTab", "scripting"],
   "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
   "background": {
     "service_worker": "service-worker.js",
     "type": "module"

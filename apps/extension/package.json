@@ -10,6 +10,7 @@
     "dev": "vite build --watch"
   },
   "dependencies": {
+    "@desaignsync/core": "*",
     "@desaignsync/shared-types": "*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

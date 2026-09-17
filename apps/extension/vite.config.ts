@@ -11,6 +11,7 @@ export default defineConfig({
   publicDir: 'public',
   resolve: {
     alias: {
+      '@desaignsync/core': resolveFromPackage('../../packages/core/src/index.ts'),
       '@desaignsync/shared-types': resolveFromPackage('../../packages/shared-types/src/index.ts')
     }
   },
