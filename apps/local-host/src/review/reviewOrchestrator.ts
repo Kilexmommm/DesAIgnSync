@@ -372,10 +372,18 @@ export class ReviewOrchestrator {
           system: bundle.system,
           messages: [{ role: 'user', content: bundle.user }],
           jsonMode: true,
-          maxTokens: 1200
+          // Thinking models (e.g. DeepSeek V4 defaults) spend part of the budget on reasoning,
+          // so the review asks for generous headroom to avoid truncated JSON.
+          maxTokens: 4000
         },
         request.options?.llmTimeoutMs
       );
+
+      if (completion.finishReason === 'length') {
+        warnings.push(
+          'The model stopped at the token limit; the structured interpretation may be incomplete (use a non-thinking model or a larger budget).'
+        );
+      }
 
       const validation = validateLlmReviewResponse(parseJsonText(completion.text));
       if (!validation.ok || validation.value === undefined) {
