@@ -70,3 +70,15 @@ export {
   normalizeElementTarget,
   type ElementTargetValidation
 } from './evidence/elementTarget.js';
+
+export {
+  DEFAULT_MATCHING_CONFIG,
+  DEFAULT_MATCHING_WEIGHTS,
+  MIN_EVIDENCE_COVERAGE,
+  MatchingEngine,
+  SIGNAL_ORDER,
+  explainMatchResult,
+  matchElement,
+  resolveMatchingConfig,
+  type MatchElementOptions
+} from './matching/matchingEngine.js';
