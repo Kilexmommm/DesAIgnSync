@@ -31,6 +31,16 @@ export type {
 } from './chrome-devtools/chrome-mcp-adapter.js';
 export { DesignSystemMCPAdapter, DS_TOOL_ALIASES, mergeAliases } from './design-system/design-system-mcp-adapter.js';
 export type { DesignSystemAdapterOptions, DsSearchQuery, DsToolOverrides } from './design-system/design-system-mcp-adapter.js';
+export {
+  candidateFromSignature,
+  EXPECTED_SIGNATURE_FIELDS,
+  SIGNATURE_SCHEMA_VERSION,
+  signatureCoverage,
+  signatureSearchText,
+  toComponentSignature,
+  toComponentSignatures
+} from './design-system/componentSignature.js';
+export type { SignatureOptions } from './design-system/componentSignature.js';
 export { StorybookMCPAdapter, STORYBOOK_EXTRA_ALIASES, STORYBOOK_MCP_PRESET_ID, createStorybookAdapter } from './storybook/storybook-mcp-adapter.js';
 export { createManagerGateway } from './mcp-tool-gateway.js';
 export type { ManagerLike, McpToolGateway } from './mcp-tool-gateway.js';
