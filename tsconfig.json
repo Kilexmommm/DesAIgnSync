@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/shared-types" },
+    { "path": "packages/core" },
+    { "path": "packages/mcp-adapters" },
+    { "path": "apps/local-host" },
+    { "path": "apps/extension" }
+  ]
+}

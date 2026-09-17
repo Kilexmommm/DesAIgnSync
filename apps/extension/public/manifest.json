@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "DesAIgnSync",
+  "version": "0.1.0",
+  "description": "MCP-first Design System compliance auditor. Audits a web app read-only against the Design System exposed through MCP.",
+  "minimum_chrome_version": "116",
+  "permissions": ["sidePanel", "storage", "tabs", "activeTab"],
+  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "DesAIgnSync - open Side Panel"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}

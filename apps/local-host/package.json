@@ -1,0 +1,26 @@
+{
+  "name": "@desaignsync/local-host",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local MCP Host: loopback API, MCP client manager and orchestration for DesAIgnSync.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "desaignsync-host": "./bin/desaignsync-host.mjs"
+  },
+  "files": ["dist", "bin", "README.md"],
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/cli.js",
+    "dev": "node --watch dist/cli.js",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@desaignsync/shared-types": "*",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
+  }
+}

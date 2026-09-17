@@ -1,0 +1,19 @@
+{
+  "name": "@desaignsync/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Versioned contracts shared by the Chrome extension, Local MCP Host and core engines.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  }
+}

@@ -1,0 +1,128 @@
+:root {
+  color-scheme: light dark;
+  --ds-border: #d7d7de;
+  --ds-muted: #6b6b76;
+  --ds-ok: #1f8a4c;
+  --ds-warn: #b26a00;
+  --ds-error: #b3261e;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ds-app {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ds-header h1 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.ds-header p {
+  margin: 2px 0 0;
+  color: var(--ds-muted);
+}
+
+.ds-card {
+  border: 1px solid var(--ds-border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.ds-card h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ds-muted);
+}
+
+.ds-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.ds-badge {
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  border: 1px solid currentColor;
+}
+
+.ds-badge--ready,
+.ds-badge--connected {
+  color: var(--ds-ok);
+}
+
+.ds-badge--starting,
+.ds-badge--degraded {
+  color: var(--ds-warn);
+}
+
+.ds-badge--error,
+.ds-badge--offline,
+.ds-badge--stopped {
+  color: var(--ds-error);
+}
+
+.ds-muted {
+  color: var(--ds-muted);
+}
+
+.ds-input,
+.ds-button {
+  font: inherit;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--ds-border);
+  background: transparent;
+  color: inherit;
+}
+
+.ds-button {
+  cursor: pointer;
+}
+
+.ds-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ds-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ds-form .ds-input {
+  flex: 1;
+  text-transform: uppercase;
+}
+
+.ds-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ds-note {
+  margin: 8px 0 0;
+  color: var(--ds-muted);
+}
+
+.ds-upcoming {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ds-muted);
+}

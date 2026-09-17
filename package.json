@@ -1,0 +1,29 @@
+{
+  "name": "desaignsync",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DesAIgnSync - MCP-first Design System compliance auditor (Chrome Side Panel + Local MCP Host).",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "tsc -b --pretty false && tsc --noEmit -p tests/tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "host": "npm run start --workspace @desaignsync/local-host",
+    "extension:build": "npm run build --workspace @desaignsync/extension",
+    "clean": "tsc -b --clean && rm -rf apps/*/dist apps/*/.tsbuild packages/*/dist packages/*/.tsbuild tests/.tsbuild"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.1",
+    "typescript": "5.9.3",
+    "vitest": "^5.0.1"
+  }
+}
