@@ -1,4 +1,5 @@
 import type { JsonValue } from './common.js';
+import type { ValidationProfile } from './config.js';
 import type { HostErrorBody } from './errors.js';
 import type { ElementTarget, EvidenceRef, PageElementEvidence } from './evidence.js';
 import type { Finding, FindingStatus } from './finding.js';
@@ -146,3 +147,35 @@ export interface ProfilesResponse {
 }
 
 export type ReviewJsonValue = JsonValue;
+
+/* ------------------------------------------------------------------ *
+ * Settings API (DS-028): remove and persist host-side configuration. *
+ * ------------------------------------------------------------------ */
+
+export interface RemoveLlmProviderRequest {
+  providerId: string;
+}
+
+export interface RemoveLlmProviderResponse {
+  removed: boolean;
+}
+
+export interface SaveProfileRequest {
+  profile: ValidationProfile;
+}
+
+export interface SaveProfileResponse {
+  saved: boolean;
+  /** Present when the host rejected the profile (invalid weights, unknown check, secrets, ...). */
+  issues?: string[];
+}
+
+export interface RemoveProfileRequest {
+  profileId: string;
+}
+
+export interface RemoveProfileResponse {
+  removed: boolean;
+  /** Built-in profiles cannot be removed, only reset to their template. */
+  reason?: string;
+}

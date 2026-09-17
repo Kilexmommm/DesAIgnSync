@@ -70,6 +70,11 @@ export class LlmProviderRegistry {
     return [...this.#providers.values()];
   }
 
+  /** Hydrates a persisted provider (DS-028) without touching the credential store. */
+  upsert(config: LlmProviderConfig): void {
+    this.#providers.set(config.id, config);
+  }
+
   get(id: string): LlmProviderConfig | undefined {
     return this.#providers.get(id);
   }

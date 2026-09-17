@@ -8,6 +8,7 @@ import {
 } from './config/hostConfig.js';
 import { EventBus } from './http/eventBus.js';
 import { createHostServer, type HostServer } from './http/server.js';
+import { ConfigStore } from './config/configStore.js';
 import { createSecretStore, type SecretStore } from './security/secretStoreFactory.js';
 import { LlmProviderRegistry } from './llm/providerRegistry.js';
 import { ProfileRegistry } from './review/profileRegistry.js';
@@ -33,6 +34,7 @@ export interface StartedHost {
   readonly providers: LlmProviderRegistry;
   readonly profiles: ProfileRegistry;
   readonly review: ReviewOrchestrator;
+  readonly configStore: ConfigStore;
   readonly config: HostRuntimeConfig;
   readonly logger: Logger;
   readonly pairingCode: string;
@@ -56,6 +58,13 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
   });
 
   const events = new EventBus();
+
+  // Settings persistence (DS-028). Secrets never reach this file, only their references.
+  const configStore = new ConfigStore({
+    configPath: config.configPath,
+    logger: logger.child({ scope: 'config' })
+  });
+  const persisted = configStore.read();
 
   // OS credential store (or documented fallback): API keys and MCP env secrets (DS-009).
   const secrets = createSecretStore({
@@ -81,15 +90,36 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
     }
   });
 
-  for (const preset of getDefaultMcpPresets()) {
-    mcp.upsertServer(preset);
+  // Once the settings file exists it is the source of truth: a preset the user removed stays removed.
+  if (persisted.mcpServers === undefined) {
+    for (const preset of getDefaultMcpPresets()) {
+      mcp.upsertServer(preset);
+    }
+  } else {
+    for (const server of persisted.mcpServers) {
+      mcp.upsertServer(server);
+    }
   }
   for (const server of options.servers ?? []) {
     mcp.upsertServer(server);
   }
 
   const providers = new LlmProviderRegistry(secrets);
+  for (const provider of persisted.llmProviders ?? []) {
+    providers.upsert(provider);
+  }
+
   const profiles = new ProfileRegistry();
+  for (const profile of persisted.profiles ?? []) {
+    try {
+      profiles.upsert(profile);
+    } catch (error) {
+      logger.warn('Discarding an invalid persisted validation profile', {
+        profileId: profile.id,
+        reason: error instanceof Error ? error.message : 'unknown'
+      });
+    }
+  }
   const review = new ReviewOrchestrator({
     mcp,
     providers,
@@ -105,7 +135,8 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
     events,
     providers,
     profiles,
-    review
+    review,
+    configStore
   });
   server.setLifecycle('ready');
   logger.info('DesAIgnSync Local Host ready', { version: HOST_VERSION, url: server.url });
@@ -127,6 +158,7 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
     providers,
     profiles,
     review,
+    configStore,
     config,
     logger,
     pairingCode: sessions.pairingCode,
