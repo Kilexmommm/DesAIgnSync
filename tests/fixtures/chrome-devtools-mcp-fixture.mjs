@@ -117,9 +117,14 @@ const handleRequest = async (request) => {
         });
       }
       if (name === 'activate_tab') {
+        const tabId = args.tabId ?? null;
+        if (tabId === null || !TABS.some((tab) => tab.id === tabId)) {
+          // Real Chrome tab ids are not MCP page ids: callers must fall back to listing pages.
+          return respondError(request.id, -32602, `Unknown tab: ${String(tabId)}`);
+        }
         return respond(request.id, {
-          content: [{ type: 'text', text: JSON.stringify({ activeTabId: args.tabId ?? null }) }],
-          structuredContent: { activeTabId: args.tabId ?? null }
+          content: [{ type: 'text', text: JSON.stringify({ activeTabId: tabId }) }],
+          structuredContent: { activeTabId: tabId }
         });
       }
       if (name === 'snapshot') {

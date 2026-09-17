@@ -6,6 +6,7 @@ import {
   HOST_API_VERSION,
   MATCH_SCHEMA_VERSION,
   type ComponentSignature,
+  type ElementTarget,
   type EvidenceRef,
   type Finding,
   type PageElementEvidence,
@@ -171,14 +172,7 @@ export class ReviewOrchestrator {
     warnings: string[]
   ): Promise<PageElementEvidence> {
     const { target } = request;
-    const pageId = target.pageId ?? target.tabId;
-    if (pageId !== undefined) {
-      try {
-        await chrome.selectPage(String(pageId), request.options?.mcpTimeoutMs);
-      } catch (error) {
-        warnings.push(`The active page could not be selected explicitly: ${messageOf(error)}`);
-      }
-    }
+    const pageId = await this.#selectPageForTarget(chrome, target, request.options?.mcpTimeoutMs, warnings);
 
     const evaluation = await chrome.evaluateScript(
       buildElementEvidenceExpression(target.selector),
@@ -229,6 +223,44 @@ export class ReviewOrchestrator {
     }
 
     return evidence;
+  }
+
+  /**
+   * The picker reports a Chrome tab id, which is not necessarily the MCP `pageId`. Try the
+   * explicit id first and fall back to matching the page by URL; never fail the review just
+   * because the page could not be pre-selected (the MCP keeps its active page).
+   */
+  async #selectPageForTarget(
+    chrome: ChromeMCPAdapter,
+    target: ElementTarget,
+    timeoutMs: number | undefined,
+    warnings: string[]
+  ): Promise<string | undefined> {
+    const requested =
+      target.pageId !== undefined || target.tabId !== undefined
+        ? String(target.pageId ?? target.tabId)
+        : undefined;
+    if (requested !== undefined) {
+      try {
+        await chrome.selectPage(requested, timeoutMs);
+        return requested;
+      } catch (error) {
+        warnings.push(`Page "${requested}" could not be selected directly: ${messageOf(error)}`);
+      }
+    }
+    try {
+      const pages = await chrome.listPages(timeoutMs);
+      const match =
+        (target.url !== undefined ? pages.find((page) => page.url === target.url) : undefined) ??
+        (requested !== undefined ? pages.find((page) => page.id === requested) : undefined);
+      if (match !== undefined) {
+        await chrome.selectPage(match.id, timeoutMs);
+        return match.id;
+      }
+    } catch (error) {
+      warnings.push(`The list of inspectable pages could not be read: ${messageOf(error)}`);
+    }
+    return undefined;
   }
 
   async #collectSignatures(
