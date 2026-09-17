@@ -99,7 +99,7 @@ export function App(): React.JSX.Element {
       {tab === 'setup' ? (
         <>
           <section className="ds-card">
-            <h2>Local MCP Host</h2>
+            <h2>DesAIgnSync Start</h2>
             <div className="ds-row">
               <span className="ds-muted">{snapshot.hostUrl || effectiveHostUrl}</span>
               <span className="ds-muted">v{snapshot.hostVersion ?? 'n/a'}</span>
