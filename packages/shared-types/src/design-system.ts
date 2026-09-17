@@ -14,12 +14,14 @@ export interface StyleReference {
   fontWeight?: number;
   lineHeight?: number;
   padding?: Box;
+  margin?: Box;
   gap?: number;
   width?: number;
   height?: number;
   minHeight?: number;
   borderRadius?: number;
   borderWidth?: number;
+  borderStyle?: string;
   boxShadow?: string;
   opacity?: number;
 }

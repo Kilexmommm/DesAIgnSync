@@ -82,3 +82,16 @@ export {
   resolveMatchingConfig,
   type MatchElementOptions
 } from './matching/matchingEngine.js';
+
+export {
+  CHECK_DEFINITIONS,
+  DEFAULT_CHECKS,
+  RULES_ENGINE_CHECK_IDS,
+  RulesEngine,
+  evaluateRules,
+  summarizeFindings,
+  type CheckOutcome,
+  type RuleEvaluationInput,
+  type RuleReference,
+  type RulesEngineOptions
+} from './rules/rulesEngine.js';
