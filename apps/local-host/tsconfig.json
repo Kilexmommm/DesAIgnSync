@@ -5,6 +5,17 @@
     "outDir": "dist",
     "tsBuildInfoFile": ".tsbuild/tsconfig.tsbuildinfo"
   },
-  "include": ["src/**/*.ts"],
-  "references": [{ "path": "../../packages/shared-types" }]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/shared-types"
+    }
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    ".tsbuild",
+    "dist"
+  ]
 }

@@ -175,7 +175,9 @@ describe('McpClientManager against a real stdio fixture (DS-004)', () => {
     expect(killed.ok).toBe(true);
 
     const restarted = await waitFor(
-      () => managerWithEvents.getStatus('crash-1')?.state === 'ready',
+      () =>
+        seen.some((entry) => entry.includes('degraded')) &&
+        managerWithEvents.getStatus('crash-1')?.state === 'ready',
       8_000
     );
     expect(restarted).toBe(true);
