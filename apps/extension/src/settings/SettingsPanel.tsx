@@ -96,7 +96,16 @@ function ServerSettings({ settings, servers, busy, onTestServer }: ServerSetting
 
   return (
     <div className="ds-subsection">
-      <h3>MCP servers</h3>
+      <h3>
+        MCP servers
+        <span
+          className="ds-help"
+          role="note"
+          title="Herramientas externas que usa el cerebro local. Chrome DevTools MCP aporta la evidencia de la página auditada; el Design System MCP aporta el catálogo de componentes (Storybook es solo un preset). Deben quedar en verde (ready)."
+        >
+          ?
+        </span>
+      </h3>
       <ul className="ds-list">
         {servers.map((server) => (
           <li key={server.serverId} className="ds-check">
@@ -245,7 +254,16 @@ function ProviderSettings({ settings }: { settings: SettingsApi }): React.JSX.El
 
   return (
     <div className="ds-subsection">
-      <h3>LLM providers</h3>
+      <h3>
+        LLM providers
+        <span
+          className="ds-help"
+          role="note"
+          title="Endpoint OpenAI-compatible que redacta la interpretación. La API key viaja al cerebro local y se guarda en el credential store del sistema; el panel no la vuelve a ver. Es opcional: sin proveedor solo verás los hechos medidos."
+        >
+          ?
+        </span>
+      </h3>
       <ul className="ds-list">
         {settings.providers.map((provider) => (
           <li key={provider.id} className="ds-check">
@@ -340,7 +358,16 @@ interface ProfileSettingsProps {
 function ProfileSettings({ settings, activeProfileId, onSelectProfile }: ProfileSettingsProps): React.JSX.Element {
   return (
     <div className="ds-subsection">
-      <h3>Validation profiles</h3>
+      <h3>
+        Validation profiles
+        <span
+          className="ds-help"
+          role="note"
+          title="Un perfil define los checks, las tolerancias y las instrucciones AI. El Core System Prompt (evidencia, seguridad, matching, formato de salida) es fijo; solo las Advanced AI Instructions se pueden editar."
+        >
+          ?
+        </span>
+      </h3>
       <p className="ds-note">
         Un perfil agrupa los <strong>checks</strong>, las <strong>tolerancias</strong> y las{' '}
         <strong>instrucciones AI</strong> con las que se revisa. El <strong>Core System Prompt</strong> (evidencia,

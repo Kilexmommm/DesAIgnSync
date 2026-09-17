@@ -31,7 +31,7 @@ export function SetupGuide(props: SetupGuideProps): React.JSX.Element {
   return (
     <section className="ds-card">
       <div className="ds-row">
-        <h2>Puesta en marcha</h2>
+        <h2>Antes de revisar</h2>
         <span className="ds-muted">
           {done}/{steps.length}
         </span>

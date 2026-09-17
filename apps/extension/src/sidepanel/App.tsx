@@ -7,6 +7,7 @@ import { ReviewView } from '../review/ReviewView.js';
 import { useReview } from '../review/useReview.js';
 import { SettingsPanel } from '../settings/SettingsPanel.js';
 import { useSettings } from '../settings/useSettings.js';
+import { Help } from './Help.js';
 import { SetupGuide } from './SetupGuide.js';
 import { TabBar, type TabDefinition, type TabId } from './Tabs.js';
 import { useElementPicker } from './useElementPicker.js';
@@ -19,17 +20,29 @@ const STATE_LABEL: Record<HostConnectionSnapshot['state'], string> = {
   connected: 'connected'
 };
 
+/** Review first: it is where everything else converges (DS-028). */
 const TABS: readonly TabDefinition[] = [
-  { id: 'setup', label: 'Empezar' },
   { id: 'review', label: 'Revisar' },
   { id: 'mcp', label: 'MCP' },
   { id: 'llm', label: 'LLM' },
   { id: 'profiles', label: 'Perfiles' }
 ];
 
+const HELP = {
+  host:
+    'DesAIgnSync Start es el cerebro local (npm run host). Corre en tu Mac, no en Chrome: lanza los servidores MCP, guarda tus API keys, y ejecuta matching, reglas e interpretación AI. Chrome no puede lanzar procesos locales por seguridad, por eso existe este puente en loopback 127.0.0.1.',
+  mcp: 'MCP es el protocolo con el que el cerebro local se conecta a herramientas externas. Chrome DevTools MCP aporta la evidencia de la página y el Design System MCP el catálogo de componentes (Storybook es solo un preset). Ambos deben estar "ready" (en verde) para que la revisión tenga sentido.',
+  llm: 'Endpoint OpenAI-compatible que redacta la interpretación en lenguaje natural. La API key se guarda en el cerebro local y nunca vuelve al panel. Es opcional: sin proveedor verás solo los hechos medidos por las reglas.',
+  profiles:
+    'Un perfil define qué checks se ejecutan, con qué tolerancias y con qué instrucciones AI. El Core System Prompt (evidencia, seguridad, matching y formato de salida) es fijo; solo las Advanced AI Instructions son editables.',
+  report:
+    'El checklist son hechos medidos por código (PASS/FAIL/REVIEW/NOT_EVALUATED). El % de match es una inferencia con su evidencia y la interpretación AI va marcada aparte: el modelo nunca puede cambiar un PASS/FAIL medido.'
+} as const;
+
 /**
- * Side Panel shell (DS-002/DS-028): tabbed layout with a guided setup, the review flow and settings.
- * The panel only orchestrates: evidence, matching, rules and the LLM run inside the Local Host.
+ * Side Panel shell (DS-002/DS-028): tabbed layout with the review flow first, a real-state
+ * pre-flight checklist and the settings. The panel only orchestrates: evidence, matching,
+ * rules and the LLM run inside the Local Host.
  */
 export function App(): React.JSX.Element {
   const { snapshot, busy, pair, refresh, unpair, updateHostUrl, testServer } = useHostConnection();
@@ -44,7 +57,7 @@ export function App(): React.JSX.Element {
     reset: resetReview
   } = useReview();
 
-  const [tab, setTab] = useState<TabId>('setup');
+  const [tab, setTab] = useState<TabId>('review');
   const [hostUrlInput, setHostUrlInput] = useState('');
   const [pairingCode, setPairingCode] = useState('');
   const [profileId, setProfileId] = useState('design-qa');
@@ -57,6 +70,9 @@ export function App(): React.JSX.Element {
   const designSystemReady = snapshot.servers.some(
     (server) => server.role === 'design-system-reference' && server.state === 'ready'
   );
+  const llmReady = settings.providers.length > 0;
+  const canReview =
+    target !== undefined && snapshot.state === 'connected' && inspectionReady && !reviewing;
 
   const handlePair = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
@@ -96,10 +112,16 @@ export function App(): React.JSX.Element {
 
       <TabBar tabs={TABS} active={tab} onChange={setTab} />
 
-      {tab === 'setup' ? (
+      {tab === 'review' ? (
         <>
           <section className="ds-card">
-            <h2>DesAIgnSync Start</h2>
+            <div className="ds-row">
+              <h2>
+                DesAIgnSync Start
+                <Help text={HELP.host} />
+              </h2>
+              <span className={`ds-badge ds-badge--${snapshot.state}`}>{STATE_LABEL[snapshot.state]}</span>
+            </div>
             <div className="ds-row">
               <span className="ds-muted">{snapshot.hostUrl || effectiveHostUrl}</span>
               <span className="ds-muted">v{snapshot.hostVersion ?? 'n/a'}</span>
@@ -147,7 +169,7 @@ export function App(): React.JSX.Element {
 
             {snapshot.state === 'offline' ? (
               <p className="ds-note">
-                Arranca el host con <code>npm run host</code> y pega el pairing code que imprime.
+                Arranca el cerebro con <code>npm run host</code> y pega el pairing code que imprime.
               </p>
             ) : null}
 
@@ -160,23 +182,21 @@ export function App(): React.JSX.Element {
             pairingOpen={snapshot.pairingOpen}
             inspectionReady={inspectionReady}
             designSystemReady={designSystemReady}
-            llmReady={settings.providers.length > 0}
+            llmReady={llmReady}
             hasTarget={target !== undefined}
             hasReview={review !== undefined}
             onGoTo={setTab}
           />
 
-          <p className="ds-note ds-footnote">
-            Próximo: reporte exportable (DS-020), page audit (DS-019), Ask AI (DS-021) y privacidad
-            (DS-022).
-          </p>
-        </>
-      ) : null}
-
-      {tab === 'review' ? (
-        <>
           <section className="ds-card">
-            <h2>Elemento seleccionado</h2>
+            <div className="ds-row">
+              <h2>Elemento seleccionado</h2>
+              <span className="ds-muted ds-inline">
+                Perfil
+                <Help text={HELP.profiles} />
+              </span>
+            </div>
+
             {target ? (
               <>
                 <div className="ds-row">
@@ -192,7 +212,7 @@ export function App(): React.JSX.Element {
                 </div>
               </>
             ) : (
-              <p className="ds-muted">Sin selección todavía.</p>
+              <p className="ds-muted">Sin selección todavía. Usa “Select element” y haz clic en la página.</p>
             )}
 
             <div className="ds-row">
@@ -205,7 +225,6 @@ export function App(): React.JSX.Element {
             </div>
 
             <div className="ds-row">
-              <span className="ds-muted">Perfil</span>
               <select
                 className="ds-input ds-select"
                 aria-label="Validation profile"
@@ -224,23 +243,32 @@ export function App(): React.JSX.Element {
 
             <div className="ds-row">
               <button
-                className="ds-button"
+                className="ds-button ds-button--primary"
                 type="button"
-                disabled={!target || reviewing || snapshot.state !== 'connected'}
+                disabled={!canReview}
                 onClick={() => void handleReview()}
               >
-                {reviewing ? 'Reviewing...' : 'Review element'}
+                {reviewing ? 'Revisando...' : 'Revisar'}
               </button>
               {review ? (
                 <button className="ds-button" type="button" onClick={resetReview}>
-                  Clear result
+                  Limpiar
                 </button>
               ) : null}
             </div>
 
+            {!inspectionReady ? (
+              <p className="ds-note">
+                Necesitas Chrome DevTools MCP activo para obtener evidencia.{' '}
+                <button className="ds-link" type="button" onClick={() => setTab('mcp')}>
+                  Ir a MCP
+                </button>
+              </p>
+            ) : null}
+
             <p className="ds-note">
               Read-only: la página nunca se modifica. La evidencia viene de Chrome DevTools MCP; el
-              matching, las reglas y la interpretación AI corren en el Local Host.
+              matching, las reglas y la interpretación AI corren en el cerebro local.
             </p>
             {pickError ? <p className="ds-note ds-badge--error">{pickError}</p> : null}
             {reviewError ? <p className="ds-note ds-badge--error">{reviewError}</p> : null}
@@ -248,18 +276,35 @@ export function App(): React.JSX.Element {
 
           {review ? (
             <section className="ds-card">
+              <div className="ds-row">
+                <h2>
+                  Reporte
+                  <Help text={HELP.report} />
+                </h2>
+                <span className="ds-muted">{review.durationMs} ms</span>
+              </div>
               <ReviewView result={review} />
             </section>
           ) : null}
+
+          <p className="ds-note ds-footnote">
+            Próximo: reporte exportable (DS-020), page audit (DS-019), Ask AI (DS-021) y privacidad
+            (DS-022).
+          </p>
         </>
       ) : null}
 
       {tab === 'mcp' ? (
         <>
           <section className="ds-card">
-            <h2>Servidores conectados</h2>
+            <div className="ds-row">
+              <h2>
+                Servidores conectados
+                <Help text={HELP.mcp} />
+              </h2>
+            </div>
             {snapshot.servers.length === 0 ? (
-              <p className="ds-muted">El host no reporta servidores MCP.</p>
+              <p className="ds-muted">El cerebro no reporta servidores MCP.</p>
             ) : (
               <ul className="ds-list">
                 {snapshot.servers.map((server) => (

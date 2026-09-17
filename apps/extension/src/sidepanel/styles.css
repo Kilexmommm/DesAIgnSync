@@ -180,6 +180,53 @@ body {
   font-size: 10px;
 }
 
+/* --- Inline help, links and primary action (DS-028) ---------------------- */
+
+.ds-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  border: 1px solid var(--ds-border);
+  border-radius: 50%;
+  color: var(--ds-muted);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: help;
+}
+
+.ds-help:hover {
+  color: inherit;
+  border-color: currentColor;
+}
+
+.ds-link {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ds-button--primary {
+  border-color: var(--ds-ok);
+  color: var(--ds-ok);
+  font-weight: 600;
+}
+
+.ds-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+
 /* --- Setup guide --------------------------------------------------------- */
 
 .ds-steps {
