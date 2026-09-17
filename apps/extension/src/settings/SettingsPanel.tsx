@@ -341,6 +341,12 @@ function ProfileSettings({ settings, activeProfileId, onSelectProfile }: Profile
   return (
     <div className="ds-subsection">
       <h3>Validation profiles</h3>
+      <p className="ds-note">
+        Un perfil agrupa los <strong>checks</strong>, las <strong>tolerancias</strong> y las{' '}
+        <strong>instrucciones AI</strong> con las que se revisa. El <strong>Core System Prompt</strong> (evidencia,
+        seguridad, matching, formato de salida) es fijo y no se edita desde aquí; solo se pueden personalizar las
+        Advanced AI Instructions del perfil.
+      </p>
       <ul className="ds-list">
         {settings.profiles.map((profile) => (
           <li key={profile.id} className="ds-row">
