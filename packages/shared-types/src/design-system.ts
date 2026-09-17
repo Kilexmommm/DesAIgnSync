@@ -66,6 +66,8 @@ export interface ComponentSignature {
   visualReferenceRef?: string;
   /** Which fields were actually provided by the MCP, for evidence coverage. */
   providedFields: string[];
+  /** Fields computed from the provided data (never invented) e.g. expectedTags from roles. */
+  derivedFields?: string[];
   kind: EvidenceKind;
   retrievedAt: string;
 }

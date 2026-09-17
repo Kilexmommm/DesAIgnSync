@@ -7,5 +7,5 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": ["**/*.test.ts", ".tsbuild", "dist"],
-  "references": [{ "path": "../shared-types" }]
+  "references": [{ "path": "../shared-types" }, { "path": "../core" }]
 }
