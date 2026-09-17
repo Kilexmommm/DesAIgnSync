@@ -10,6 +10,8 @@ import {
 
 import type { ProviderView, SettingsApi } from './useSettings.js';
 
+export type SettingsSection = 'mcp' | 'llm' | 'profiles';
+
 interface SettingsPanelProps {
   settings: SettingsApi;
   servers: McpServerRuntimeStatus[];
@@ -17,6 +19,8 @@ interface SettingsPanelProps {
   onTestServer: (serverId: string) => Promise<McpServerRuntimeStatus | undefined>;
   activeProfileId: string;
   onSelectProfile: (profileId: string) => void;
+  /** Which block to render: the Side Panel puts each one in its own tab (DS-028). */
+  section?: SettingsSection;
 }
 
 /**
@@ -29,13 +33,18 @@ export function SettingsPanel({
   busy,
   onTestServer,
   activeProfileId,
-  onSelectProfile
+  onSelectProfile,
+  section = 'mcp'
 }: SettingsPanelProps): React.JSX.Element {
   return (
     <div className="ds-settings">
-      <ServerSettings settings={settings} servers={servers} busy={busy} onTestServer={onTestServer} />
-      <ProviderSettings settings={settings} />
-      <ProfileSettings settings={settings} activeProfileId={activeProfileId} onSelectProfile={onSelectProfile} />
+      {section === 'mcp' ? (
+        <ServerSettings settings={settings} servers={servers} busy={busy} onTestServer={onTestServer} />
+      ) : null}
+      {section === 'llm' ? <ProviderSettings settings={settings} /> : null}
+      {section === 'profiles' ? (
+        <ProfileSettings settings={settings} activeProfileId={activeProfileId} onSelectProfile={onSelectProfile} />
+      ) : null}
       {settings.error ? <p className="ds-note ds-badge--error">{settings.error}</p> : null}
       {settings.notice ? <p className="ds-note">{settings.notice}</p> : null}
     </div>
