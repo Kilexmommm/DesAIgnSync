@@ -41,12 +41,22 @@ export const startLlmFixture = (mode: LlmFixtureMode = 'ok'): Promise<StartedLlm
             res.end(JSON.stringify({ error: { message: 'invalid api key' } }));
             return;
           }
-          const requested = lastChatPayload as { max_tokens?: number };
+          const requested = lastChatPayload as { max_tokens?: number; response_format?: { type?: string } };
           const finish = requested.max_tokens === 1 ? 'length' : 'stop';
+          // JSON mode (DS-018 review): answer with a schema-shaped review payload.
+          const wantsJson = requested.response_format?.type === 'json_object';
+          const content = wantsJson
+            ? JSON.stringify({
+                summary: 'The element is a native button that matches Button.',
+                findings: [],
+                recommendation: 'Keep using the Design System Button component.',
+                uncertainty: 'The focus state was not observed in this review.'
+              })
+            : 'pong';
           res.writeHead(200, { 'content-type': 'application/json' });
           res.end(
             JSON.stringify({
-              choices: [{ message: { content: 'pong' }, finish_reason: finish }],
+              choices: [{ message: { content }, finish_reason: finish }],
               usage: { prompt_tokens: 3, completion_tokens: 1 }
             })
           );

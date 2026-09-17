@@ -150,6 +150,8 @@ export interface HostConfigFile {
   allowRemoteOrigins: boolean;
   pinnedExtensionOrigins: string[];
   logLevel: 'silent' | 'error' | 'warn' | 'info' | 'debug';
+  /** `auto` prefers the OS credential store; `file` forces the encrypted fallback (CI/headless). */
+  secretBackend?: 'auto' | 'os-keychain' | 'file';
   projects: ProjectConfig[];
   mcpServers: McpServerConfig[];
   llmProviders: LlmProviderConfig[];

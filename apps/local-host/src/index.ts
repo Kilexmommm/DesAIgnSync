@@ -53,3 +53,13 @@ export {
   type LlmOperationResult,
   type LlmRuntimeOptions
 } from './llm/llmProviderAdapter.js';
+export { LlmProviderRegistry } from './llm/providerRegistry.js';
+export { ProfileRegistry, DEFAULT_PROFILE_ID } from './review/profileRegistry.js';
+export {
+  ReviewOrchestrator,
+  buildSearchQuery,
+  describeProfileForPrompt,
+  formatFindings,
+  parseJsonText,
+  type ReviewOrchestratorOptions
+} from './review/reviewOrchestrator.js';

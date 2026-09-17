@@ -14,12 +14,16 @@ export const DEFAULT_PORT = 8787;
 
 export type LogLevel = 'silent' | 'error' | 'warn' | 'info' | 'debug';
 
+/** Where API keys and MCP env secrets are stored (DS-009). */
+export type SecretBackendMode = 'auto' | 'os-keychain' | 'file';
+
 export interface HostRuntimeConfig {
   host: string;
   port: number;
   dataDir: string;
   configPath: string;
   logLevel: LogLevel;
+  secretBackend: SecretBackendMode;
   /** Accept any `chrome-extension://` origin. Pairing code + token stay the real control. */
   allowExtensionScheme: boolean;
   /** When non-empty, only these exact extension origins are accepted (production hardening). */
@@ -93,6 +97,7 @@ export function loadHostConfig(options: LoadHostConfigOptions = {}): HostRuntime
 
   const envPort = env['DESAIGNSYNC_PORT'];
   const envLogLevel = env['DESAIGNSYNC_LOG_LEVEL'];
+  const envSecretBackend = env['DESAIGNSYNC_SECRET_BACKEND'];
   const envPinned = env['DESAIGNSYNC_EXTENSION_ORIGINS'];
   const envAllowScheme = env['DESAIGNSYNC_ALLOW_EXTENSION_SCHEME'];
   const envDevOrigins = env['DESAIGNSYNC_ALLOW_DEV_REMOTE_ORIGINS'];
@@ -107,6 +112,11 @@ export function loadHostConfig(options: LoadHostConfigOptions = {}): HostRuntime
   const pinnedExtensionOrigins =
     envPinned !== undefined ? parseList(envPinned) : (fileConfig.pinnedExtensionOrigins ?? []);
 
+  const secretBackend = (envSecretBackend ?? fileConfig.secretBackend ?? 'auto') as SecretBackendMode;
+  if (!['auto', 'os-keychain', 'file'].includes(secretBackend)) {
+    throw invalid('secretBackend', secretBackend);
+  }
+
   const config: HostRuntimeConfig = {
     host: LOOPBACK_HOST,
     port:
@@ -118,6 +128,7 @@ export function loadHostConfig(options: LoadHostConfigOptions = {}): HostRuntime
     dataDir,
     configPath,
     logLevel,
+    secretBackend,
     allowExtensionScheme:
       envAllowScheme !== undefined
         ? parseBoolean('allowExtensionScheme', envAllowScheme)

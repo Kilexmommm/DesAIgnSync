@@ -1,11 +1,8 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
 
 import { DesaignSyncHostError } from '@desaignsync/shared-types';
 
 import { assertSecretRef, type SecretBackendKind, type SecretStore } from './secretStore.js';
-
-const execFileAsync = promisify(execFile);
 
 export interface CliRunnerResult {
   code: number;
@@ -19,23 +16,46 @@ export type CliRunner = (
   options?: { input?: string }
 ) => Promise<CliRunnerResult>;
 
-export const defaultCliRunner: CliRunner = async (file, args, options) => {
-  try {
-    const result = await execFileAsync(file, args, {
-      ...(options?.input !== undefined
-        ? { input: options.input } as Parameters<typeof execFileAsync>[2]
-        : {})
-    });
-    return { code: 0, stdout: String(result.stdout), stderr: String(result.stderr) };
-  } catch (error) {
-    const err = error as { code?: number | string; stdout?: unknown; stderr?: unknown };
-    return {
-      code: typeof err.code === 'number' ? err.code : 1,
-      stdout: typeof err.stdout === 'string' ? err.stdout : '',
-      stderr: typeof err.stderr === 'string' ? err.stderr : ''
+/**
+ * Runs an OS credential-store CLI. Secrets travel through stdin (never argv) and every call is
+ * bounded by a timeout: a misbehaving CLI must never hang the host.
+ */
+export const defaultCliRunner: CliRunner = (file, args, options) =>
+  new Promise<CliRunnerResult>((resolve) => {
+    let stdout = '';
+    let stderr = '';
+    let settled = false;
+    const finish = (result: CliRunnerResult): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(result);
     };
-  }
-};
+    const timer = setTimeout(() => {
+      try {
+        child.kill('SIGKILL');
+      } catch {
+        // Already gone.
+      }
+      finish({ code: 124, stdout, stderr: `${stderr}\ncredential store CLI timed out` });
+    }, 10_000);
+    timer.unref?.();
+
+    const child = spawn(file, args, { stdio: ['pipe', 'pipe', 'pipe'] });
+    child.stdout?.on('data', (chunk) => {
+      stdout += String(chunk);
+    });
+    child.stderr?.on('data', (chunk) => {
+      stderr += String(chunk);
+    });
+    child.on('error', (error) => finish({ code: 127, stdout, stderr: `${stderr}${error.message}` }));
+    child.on('close', (code) => finish({ code: code ?? 1, stdout, stderr }));
+
+    if (options?.input !== undefined) {
+      child.stdin?.write(options.input);
+    }
+    child.stdin?.end();
+  });
 
 const KEYCHAIN_SERVICE = 'desaignsync';
 

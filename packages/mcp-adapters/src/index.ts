@@ -43,6 +43,12 @@ export {
 export type { SignatureOptions } from './design-system/componentSignature.js';
 export { StorybookMCPAdapter, STORYBOOK_EXTRA_ALIASES, STORYBOOK_MCP_PRESET_ID, createStorybookAdapter } from './storybook/storybook-mcp-adapter.js';
 export { createManagerGateway } from './mcp-tool-gateway.js';
+export {
+  COLLECT_EVIDENCE_MARKER,
+  buildElementEvidenceExpression,
+  readCollectedDescriptor
+} from './chrome-devtools/elementEvidenceCollector.js';
+export type { CollectedElementDescriptor } from './chrome-devtools/elementEvidenceCollector.js';
 export type { ManagerLike, McpToolGateway } from './mcp-tool-gateway.js';
 export { discoverLogicalTools, normalizeToolName, pickArgKey, resolveLogicalTool } from './tool-discovery.js';
 export type { DiscoveredTools, LogicalAliasTable } from './tool-discovery.js';

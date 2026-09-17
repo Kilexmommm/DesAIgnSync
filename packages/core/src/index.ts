@@ -5,10 +5,13 @@
  *   - src/evidence   ElementEvidence normalization                  (DS-010, wave 3)
  *   - src/matching   candidate ranking + confidence                 (DS-014, wave 4)
  *   - src/rules      deterministic PASS/FAIL/REVIEW/NOT_EVALUATED   (DS-015, wave 4)
+ *   - src/prompts    protected core prompt + bundle assembly        (DS-016, wave 4)
+ *   - src/profiles   validation profiles and tiers                  (DS-017, wave 4)
+ *   - src/review     end-to-end assembly of matching + rules        (DS-018, wave 5)
  *   - src/reporting  checklist + export                             (DS-020, wave 5/6)
  *
- * No engine is implemented yet. This module re-exports the contracts the engines will
- * build on, which also proves `packages/shared-types` is consumable from Core (DS-001 AC).
+ * Everything here is deterministic and free of I/O: MCP and LLM transports live in
+ * `apps/local-host` and `packages/mcp-adapters`.
  */
 
 export type {
@@ -162,3 +165,12 @@ export {
   type ProfileValidation,
   type TierExposure
 } from './profiles/profileCatalog.js';
+
+export {
+  assembleReview,
+  type ReviewAssembly,
+  type ReviewAssemblyInput,
+  type ReviewLlmOutcome
+} from './review/reviewAssembler.js';
+
+export { describeRuleReference, signatureToRuleReference } from './review/ruleReference.js';

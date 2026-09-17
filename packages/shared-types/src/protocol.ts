@@ -21,6 +21,7 @@ export const HOST_API_PATHS = {
   llmProviders: '/llm/providers',
   llmProvidersTest: '/llm/providers/test',
   llmProvidersModels: '/llm/providers/models',
+  profiles: '/profiles',
   inspectionStart: '/inspection/start',
   inspectionSnapshot: '/inspection/snapshot',
   inspectionScreenshot: '/inspection/screenshot',

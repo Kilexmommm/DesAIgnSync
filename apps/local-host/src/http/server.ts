@@ -11,20 +11,32 @@ import {
   type HostEvent,
   type HostInfoResponse,
   type HostLifecycleState,
+  type LlmModelsResponse,
+  type LlmProvidersResponse,
   type McpServerConfig,
   type McpServersResponse,
   type McpToolCallOutcome,
   type McpToolCallRequest,
   type PairRequest,
   type PairResponse,
+  type ProfilesResponse,
+  type ReviewRequest,
+  type ReviewResult,
+  type SaveLlmProviderRequest,
   type SessionInfoResponse,
+  type TestLlmProviderRequest,
+  type TestLlmProviderResponse,
   type TestMcpServerRequest,
   type TestMcpServerResponse
 } from '@desaignsync/shared-types';
+import { normalizeElementTarget } from '@desaignsync/core';
 
 import { HOST_VERSION, type HostRuntimeConfig } from '../config/hostConfig.js';
 import type { Logger } from '../logging/logger.js';
 import type { McpClientManager } from '../mcp/McpClientManager.js';
+import type { LlmProviderRegistry } from '../llm/providerRegistry.js';
+import type { ProfileRegistry } from '../review/profileRegistry.js';
+import type { ReviewOrchestrator } from '../review/reviewOrchestrator.js';
 import { evaluateOrigin } from '../security/originPolicy.js';
 import type { SessionRecord, SessionStore } from '../security/sessionStore.js';
 import { EventBus } from './eventBus.js';
@@ -36,6 +48,9 @@ export interface HostServerOptions {
   sessions: SessionStore;
   mcp: McpClientManager;
   events?: EventBus;
+  providers?: LlmProviderRegistry;
+  profiles?: ProfileRegistry;
+  review?: ReviewOrchestrator;
   onShutdownRequested?: () => void;
 }
 
@@ -284,6 +299,83 @@ export async function createHostServer(options: HostServerOptions): Promise<Host
       return;
     }
 
+    if (path === HOST_API_PATHS.llmProviders && method === 'GET') {
+      const body: LlmProvidersResponse = { providers: options.providers?.describe() ?? [] };
+      writeJson(res, 200, body, req);
+      return;
+    }
+
+    if (path === HOST_API_PATHS.llmProviders && method === 'POST') {
+      const payload = asRecord(await readJsonBody(req, config)) as unknown as SaveLlmProviderRequest;
+      if (typeof payload.name !== 'string' || typeof payload.baseUrl !== 'string') {
+        throw new DesaignSyncHostError('BAD_REQUEST', 'Provider name and baseUrl are required.');
+      }
+      const registry = requireProviders(options);
+      const provider = await registry.save(payload);
+      // Only the safe projection leaves the host: the API key stays in the credential store.
+      const saved = registry.describe().find((entry) => entry.id === provider.id);
+      writeJson(res, 200, { provider: saved ?? undefined }, req);
+      return;
+    }
+
+    if (path === HOST_API_PATHS.llmProvidersTest && method === 'POST') {
+      const payload = asRecord(await readJsonBody(req, config)) as unknown as TestLlmProviderRequest;
+      const registry = requireProviders(options);
+      let providerId = payload.providerId;
+      if (providerId === undefined && payload.config !== undefined) {
+        providerId = (await registry.save(payload.config)).id;
+      }
+      const result = await registry.adapter(providerId).testConnection(payload.timeoutMs);
+      const body: TestLlmProviderResponse = {
+        ok: result.ok,
+        ...(result.value?.model !== undefined ? { model: result.value.model } : {}),
+        ...(result.latencyMs !== undefined ? { latencyMs: result.latencyMs } : {}),
+        ...(result.error !== undefined ? { error: result.error } : {})
+      };
+      writeJson(res, 200, body, req);
+      return;
+    }
+
+    if (path === HOST_API_PATHS.llmProvidersModels && method === 'POST') {
+      const payload = asRecord(await readJsonBody(req, config)) as unknown as TestLlmProviderRequest;
+      const registry = requireProviders(options);
+      const result = await registry.adapter(payload.providerId).fetchModels(payload.timeoutMs);
+      const body: LlmModelsResponse = {
+        ok: result.ok,
+        models: result.value ?? [],
+        ...(result.latencyMs !== undefined ? { latencyMs: result.latencyMs } : {}),
+        ...(result.error !== undefined ? { error: result.error } : {})
+      };
+      writeJson(res, 200, body, req);
+      return;
+    }
+
+    if (path === HOST_API_PATHS.profiles && method === 'GET') {
+      const body: ProfilesResponse = { profiles: options.profiles?.describe() ?? [] };
+      writeJson(res, 200, body, req);
+      return;
+    }
+
+    if (path === HOST_API_PATHS.inspectionReview && method === 'POST') {
+      const payload = asRecord(await readJsonBody(req, config)) as unknown as ReviewRequest;
+      const validation = normalizeElementTarget(payload.target);
+      if (!validation.ok || validation.target === undefined) {
+        throw new DesaignSyncHostError(
+          'BAD_REQUEST',
+          `A valid element target is required: ${validation.issues.join('; ')}`
+        );
+      }
+      if (options.review === undefined) {
+        throw new DesaignSyncHostError('HOST_NOT_READY', 'The review orchestrator is not available.');
+      }
+      const result: ReviewResult = await options.review.review({
+        ...payload,
+        target: validation.target
+      });
+      writeJson(res, 200, result, req);
+      return;
+    }
+
     throw new DesaignSyncHostError('NOT_FOUND', `Unknown route: ${method} ${path}`, {
       details: { correlationId }
     });
@@ -318,9 +410,13 @@ export async function createHostServer(options: HostServerOptions): Promise<Host
         }
       }
       wss.close();
-      await new Promise<void>((resolve) => {
+      const closed = new Promise<void>((resolve) => {
         server.close(() => resolve());
       });
+      // Keep-alive sockets (Side Panel polling, CLI) would otherwise delay shutdown.
+      server.closeIdleConnections?.();
+      server.closeAllConnections?.();
+      await closed;
     }
   };
 
@@ -418,6 +514,13 @@ const asRecord = (value: unknown): Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
+
+const requireProviders = (options: HostServerOptions): LlmProviderRegistry => {
+  if (options.providers === undefined) {
+    throw new DesaignSyncHostError('HOST_NOT_READY', 'The LLM provider registry is not available.');
+  }
+  return options.providers;
+};
 
 /** Validates an MCP server config coming from the Side Panel (never trusts the payload). */
 export const validateMcpServerConfig = (raw: Record<string, unknown>): McpServerConfig => {
