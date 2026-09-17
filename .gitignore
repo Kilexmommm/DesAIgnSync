@@ -29,3 +29,9 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 *.log
+
+# Compiled leftovers inside tests/fixtures (*.mjs fixtures are hand-written and stay tracked)
+tests/fixtures/*.js
+tests/fixtures/*.js.map
+tests/fixtures/*.d.ts
+tests/fixtures/*.d.ts.map
