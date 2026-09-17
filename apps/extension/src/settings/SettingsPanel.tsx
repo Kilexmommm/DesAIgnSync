@@ -1,6 +1,12 @@
 import { useState, type FormEvent } from 'react';
 
-import type { McpServerConfig, McpServerRuntimeStatus } from '@desaignsync/shared-types';
+import {
+  LLM_PROVIDER_PRESETS,
+  DEFAULT_LLM_PROVIDER_PRESET_ID,
+  findLlmProviderPreset,
+  type McpServerConfig,
+  type McpServerRuntimeStatus
+} from '@desaignsync/shared-types';
 
 import type { ProviderView, SettingsApi } from './useSettings.js';
 
@@ -139,11 +145,14 @@ function ServerSettings({ settings, servers, busy, onTestServer }: ServerSetting
 }
 
 function ProviderSettings({ settings }: { settings: SettingsApi }): React.JSX.Element {
-  const [name, setName] = useState('');
-  const [baseUrl, setBaseUrl] = useState('http://127.0.0.1:1234/v1');
+  // The form starts from the recommended preset, but every value stays editable (DS-028).
+  const initialPreset = findLlmProviderPreset(DEFAULT_LLM_PROVIDER_PRESET_ID);
+  const [presetId, setPresetId] = useState(initialPreset?.id ?? 'custom');
+  const [name, setName] = useState(initialPreset?.label ?? '');
+  const [baseUrl, setBaseUrl] = useState(initialPreset?.baseUrl ?? 'http://127.0.0.1:1234/v1');
   const [apiKey, setApiKey] = useState('');
-  const [modelsText, setModelsText] = useState('');
-  const [selectedModel, setSelectedModel] = useState('');
+  const [modelsText, setModelsText] = useState((initialPreset?.suggestedModels ?? []).join(', '));
+  const [selectedModel, setSelectedModel] = useState(initialPreset?.suggestedModels[0] ?? '');
   const [visionMode, setVisionMode] = useState<'auto' | 'yes' | 'no'>('auto');
   const [fetched, setFetched] = useState<Record<string, string[] | undefined>>({});
   const [probe, setProbe] = useState<Record<string, string | undefined>>({});
@@ -151,6 +160,25 @@ function ProviderSettings({ settings }: { settings: SettingsApi }): React.JSX.El
 
   const vision = (value: string): 'auto' | 'yes' | 'no' =>
     value === 'yes' || value === 'no' ? value : 'auto';
+
+  const activePreset = findLlmProviderPreset(presetId);
+  const presetHint = activePreset
+    ? [activePreset.hint, activePreset.docsUrl].filter((part): part is string => part !== undefined).join(' · ')
+    : undefined;
+
+  /** A preset only prefills fields: the user can still override every value afterwards. */
+  const applyPreset = (id: string): void => {
+    setPresetId(id);
+    const preset = findLlmProviderPreset(id);
+    if (!preset) return;
+    if (preset.baseUrl !== '') setBaseUrl(preset.baseUrl);
+    if (preset.suggestedModels.length > 0) {
+      setModelsText(preset.suggestedModels.join(', '));
+      setSelectedModel(preset.suggestedModels[0] ?? '');
+    }
+    if (preset.category !== 'custom') setName(preset.label);
+    setVisionMode(preset.visionMode);
+  };
 
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
@@ -256,6 +284,19 @@ function ProviderSettings({ settings }: { settings: SettingsApi }): React.JSX.El
       </ul>
 
       <form className="ds-form ds-form--grid" onSubmit={(event) => void submit(event)}>
+        <select
+          className="ds-input ds-field-full"
+          aria-label="Provider preset"
+          value={presetId}
+          onChange={(event) => applyPreset(event.target.value)}
+        >
+          {LLM_PROVIDER_PRESETS.map((preset) => (
+            <option key={preset.id} value={preset.id}>
+              {preset.label}
+            </option>
+          ))}
+        </select>
+        {presetHint !== undefined ? <p className="ds-note ds-field-full">{presetHint}</p> : null}
         <input className="ds-input" aria-label="Provider name" placeholder="Provider name" value={name} onChange={(event) => setName(event.target.value)} />
         <input className="ds-input" aria-label="Base URL" placeholder="https://api.example.com/v1" value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} />
         <input

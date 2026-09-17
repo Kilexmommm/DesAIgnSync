@@ -153,6 +153,14 @@ body {
   grid-column: span 2;
 }
 
+.ds-form--grid .ds-field-full {
+  grid-column: span 2;
+}
+
+.ds-form--grid .ds-note.ds-field-full {
+  margin: 0;
+}
+
 .ds-inline {
   display: inline-flex;
   align-items: center;

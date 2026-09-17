@@ -197,7 +197,7 @@ describe('review orchestrator (DS-018 vertical slice, real fixtures only)', () =
     const host = await startTestHost({ withDesignSystem: true });
 
     const result = await host.review.review({
-      target: { ...target, tabId: 'chrome-tab-42', url: 'https://example.test/' },
+      target: { ...target, tabId: 4242, url: 'https://example.test/' },
       inspectionMcpId: 'chrome-fixture',
       designSystemMcpId: 'ds-fixture',
       profileId: 'design-qa',
