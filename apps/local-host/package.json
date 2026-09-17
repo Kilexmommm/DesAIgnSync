@@ -17,6 +17,8 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
+    "@desaignsync/core": "*",
+    "@desaignsync/mcp-adapters": "*",
     "@desaignsync/shared-types": "*",
     "ws": "^8.21.3"
   },

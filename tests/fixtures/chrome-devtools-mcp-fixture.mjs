@@ -48,6 +48,42 @@ const TABS = [
   { id: 'tab-2', title: 'Fixture Checkout', url: 'https://example.test/checkout' }
 ];
 
+/**
+ * Descriptor returned when a read-only evidence collector snippet is evaluated (DS-018).
+ * Shaped exactly like `CollectedElementDescriptor` so the whole review chain can run
+ * against fixtures without mocking anything.
+ */
+const ELEMENT_DESCRIPTOR = {
+  tagName: 'button',
+  role: 'button',
+  accessibleName: 'Guardar',
+  textHint: 'Guardar',
+  attributes: { type: 'button' },
+  classNames: ['btn', 'btn-primary'],
+  ariaState: {},
+  labelTexts: [],
+  childSummary: [],
+  computedStyles: {
+    color: '#ffffff',
+    backgroundColor: '#0057b8',
+    fontFamily: 'Inter, sans-serif',
+    fontSize: '14px',
+    fontWeight: '600',
+    lineHeight: '20px',
+    borderRadius: '8px',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    height: '40px',
+    width: '120px',
+    padding: '12px 16px 12px 16px',
+    margin: '0px 0px 0px 0px',
+    display: 'inline-flex'
+  },
+  geometry: { x: 0, y: 0, width: 120, height: 40 },
+  viewport: { width: 1280, height: 800 },
+  disabled: false
+};
+
 const send = (message) => {
   process.stdout.write(`${JSON.stringify(message)}\n`);
 };
@@ -112,7 +148,14 @@ const handleRequest = async (request) => {
         });
       }
       if (name === 'run_js') {
-        const result = args.script === 'document.title' ? 'Fixture Home' : `evaluated:${String(args.script ?? '')}`;
+        const script = String(args.script ?? '');
+        if (script.includes('desaignsync:collect-element-evidence')) {
+          return respond(request.id, {
+            content: [{ type: 'text', text: JSON.stringify({ result: ELEMENT_DESCRIPTOR }) }],
+            structuredContent: { result: ELEMENT_DESCRIPTOR }
+          });
+        }
+        const result = script === 'document.title' ? 'Fixture Home' : `evaluated:${script}`;
         return respond(request.id, {
           content: [{ type: 'text', text: JSON.stringify({ result }) }],
           structuredContent: { result }

@@ -9,6 +9,9 @@ import {
 import { EventBus } from './http/eventBus.js';
 import { createHostServer, type HostServer } from './http/server.js';
 import { createSecretStore, type SecretStore } from './security/secretStoreFactory.js';
+import { LlmProviderRegistry } from './llm/providerRegistry.js';
+import { ProfileRegistry } from './review/profileRegistry.js';
+import { ReviewOrchestrator } from './review/reviewOrchestrator.js';
 import { createLogger, type Logger } from './logging/logger.js';
 import { McpClientManager } from './mcp/McpClientManager.js';
 import { getDefaultMcpPresets } from './mcp/presets.js';
@@ -27,6 +30,9 @@ export interface StartedHost {
   readonly mcp: McpClientManager;
   readonly sessions: SessionStore;
   readonly secrets: SecretStore;
+  readonly providers: LlmProviderRegistry;
+  readonly profiles: ProfileRegistry;
+  readonly review: ReviewOrchestrator;
   readonly config: HostRuntimeConfig;
   readonly logger: Logger;
   readonly pairingCode: string;
@@ -52,7 +58,10 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
   const events = new EventBus();
 
   // OS credential store (or documented fallback): API keys and MCP env secrets (DS-009).
-  const secrets = createSecretStore({ dataDir: config.dataDir });
+  const secrets = createSecretStore({
+    dataDir: config.dataDir,
+    preferOsKeychain: config.secretBackend !== 'file'
+  });
 
   const mcp = new McpClientManager({
     defaultTimeoutMs: config.defaultMcpTimeoutMs,
@@ -79,12 +88,24 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
     mcp.upsertServer(server);
   }
 
+  const providers = new LlmProviderRegistry(secrets);
+  const profiles = new ProfileRegistry();
+  const review = new ReviewOrchestrator({
+    mcp,
+    providers,
+    profiles,
+    logger: logger.child({ scope: 'review' })
+  });
+
   const server = await createHostServer({
     config,
     logger: logger.child({ scope: 'http' }),
     sessions,
     mcp,
-    events
+    events,
+    providers,
+    profiles,
+    review
   });
   server.setLifecycle('ready');
   logger.info('DesAIgnSync Local Host ready', { version: HOST_VERSION, url: server.url });
@@ -103,6 +124,9 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
     mcp,
     sessions,
     secrets,
+    providers,
+    profiles,
+    review,
     config,
     logger,
     pairingCode: sessions.pairingCode,
