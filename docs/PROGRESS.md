@@ -1,13 +1,13 @@
 # PROGRESS.md — contexto compactado
 
-Estado del proyecto al 2026-09-17. `main` = `4035901`, todo pusheado a
-`github.com/Kilexmommm/DesAIgnSync`. Este archivo es el resumen durable: sirve para
-retomar el trabajo sin releer la conversación completa.
+Estado del proyecto al 2026-09-17. Todo pusheado a `github.com/Kilexmommm/DesAIgnSync`
+(ver `git log --oneline -1` en `main` para el hash actual). Este archivo es el resumen
+durable: sirve para retomar el trabajo sin releer la conversación completa.
 
 ## Verificación actual
 
 - `npm run typecheck` → **exit 0**
-- `npx vitest run` → **95 tests / 17 suites, 0 fallos** (fixtures MCP y LLM **reales**, sin mocks)
+- `npx vitest run` → **135 tests / 20 suites, 0 fallos** (fixtures MCP y LLM **reales**, sin mocks)
 - `npm run extension:build` → `apps/extension/dist` (sidepanel.js + service-worker.js + manifest MV3)
 - `node apps/local-host/bin/desaignsync-host.mjs --version` → `0.1.0`
 
@@ -18,17 +18,12 @@ retomar el trabajo sin releer la conversación completa.
 | 1 — Foundation | DS-001..004 | ✅ mergeado | monorepo npm workspaces + TS project references; MV3 Side Panel; Local MCP Host (`/health`, pairing con rate-limit, API autenticada, WS `/events`); `McpClientManager` stdio + streamable-http con restart/backoff y sin huérfanos |
 | 2 — Connections | DS-005..009 | ✅ mergeado | `ChromeMCPAdapter`, `DesignSystemMCPAdapter` (5 operaciones lógicas §11.1), preset Storybook; `LlmProviderAdapter` OpenAI-compatible; `SecretStore` (keychain del SO + fallback AES-256-GCM) |
 | 3 — Evidence | DS-010..013 | ✅ mergeado | `normalizeElementEvidence` + `evidenceCoverage`; `classNormalizer` con pesos y `CLASS_SIGNAL_WEIGHT_CAP`; `toComponentSignature` (+`providedFields`/`derivedFields`); picker read-only con permisos opcionales |
+| 4 — Intelligence | DS-014..017 | ✅ mergeado | `matchElement`/`MatchingEngine` (9 señales, pesos de §12, tope 10% a clases, `MIN_EVIDENCE_COVERAGE`, `no-reliable-match`); `evaluateRules` con 22 checks y tolerancias ±2px/±1px; `CORE_SYSTEM_PROMPT` protegido + `buildPromptBundle`/`reconcileFindings`; 6 perfiles y modos Simple/Advanced/Expert |
 
 Commits por historia en `main`: `2b6a8be` (DS-011), `310f44d` (DS-010), `ada69a4` (DS-013),
 `883d17f` (DS-012), `4035901` (chore), más los merges de Wave 1 y 2.
 
 ## Pendiente
-
-**Wave 4 — Intelligence** (dependencias ya satisfechas):
-- `DS-014` matching probabilístico con pesos, top-N y confidence (§12)
-- `DS-015` Rules Engine determinístico con tolerancias y PASS/FAIL/REVIEW/NOT_EVALUATED (§15)
-- `DS-016` Core System Prompt protegido + Advanced Validation Prompt editable (§14)
-- `DS-017` perfiles Simple/Advanced/Expert y presets de validación (§13)
 
 **Wave 5 — Vertical slice (milestone)**: `DS-018` (`select → Chrome MCP → evidence → DS MCP → matching → rules → LLM → checklist`), `DS-019`, `DS-020`, `DS-022`, `DS-028`.
 **Waves 6-7**: `DS-021`, `DS-023`, `DS-024`, `DS-025`, `DS-026`, `DS-027`, `DS-029`, `DS-030`.
@@ -49,6 +44,8 @@ Commits por historia en `main`: `2b6a8be` (DS-011), `310f44d` (DS-010), `ada69a4
 
 ## Estado del repo
 
-- Ramas locales/remotas: `main` + `feature/ds-001`, `ds-005`, `ds-008`, `ds-010`, `ds-012`, `ds-013` (todas mergeadas).
+- Ramas locales/remotas: `main` + `feature/ds-001..ds-017` (todas mergeadas a `main`).
 - Interfaz interna del host (§18) implementada: `/health`, `/info`, `/session/pair|renew`, `/mcp/servers`, `/mcp/servers/test`, `/mcp/tools/call`, WS `/events`. Falta cablear `/llm/providers*`, `/inspection/*` y `/reports/export` cuando existan sus consumidores (Wave 5).
 - Sin labels/milestones en los GitHub Issues (el board "DesAIgnSync (Todo)" existe).
+- Nota: otra sesión/agente ha estado tocando `packages/ui/` en paralelo (timestamps recientes);
+  sigue sin trackear y sus scripts de Storybook se revirtieron de `package.json`.
