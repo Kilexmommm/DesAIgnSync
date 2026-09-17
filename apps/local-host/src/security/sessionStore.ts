@@ -32,6 +32,11 @@ export interface SessionStoreOptions {
   maxPairingAttempts?: number;
   now?: () => number;
   randomBytesFn?: (size: number) => Buffer;
+  /**
+   * Notified when the window is reopened because a client presented an invalid token.
+   * The host uses it to print the new code in its terminal and to notify connected panels.
+   */
+  onPairingWindowOpened?: (code: string, reason: 'reopened') => void;
 }
 
 const sha256 = (value: string): Buffer => createHash('sha256').update(value, 'utf8').digest();
@@ -55,6 +60,7 @@ export class SessionStore {
   readonly #maxPairingAttempts: number;
   readonly #nowFn: () => number;
   readonly #randomBytesFn: (size: number) => Buffer;
+  readonly #onPairingWindowOpened: ((code: string, reason: 'reopened') => void) | undefined;
 
   constructor(options: SessionStoreOptions) {
     this.#tokenTtlMs = options.tokenTtlMs;
@@ -62,6 +68,7 @@ export class SessionStore {
     this.#maxPairingAttempts = Math.max(2, options.maxPairingAttempts ?? 5);
     this.#nowFn = options.now ?? (() => Date.now());
     this.#randomBytesFn = options.randomBytesFn ?? ((size: number) => randomBytes(size));
+    this.#onPairingWindowOpened = options.onPairingWindowOpened;
     this.#pairingCode = generatePairingCode();
     this.#pairingOpen = true;
     this.#pairingExpiresAt = this.#now() + options.pairingWindowMs;
@@ -92,6 +99,24 @@ export class SessionStore {
     this.#pairingExpiresAt =
       this.#pairingWindowMs === 0 ? 0 : this.#now() + this.#pairingWindowMs;
     return this.#pairingCode;
+  }
+
+  /**
+   * Re-opens the pairing window when a client presented a missing/expired token, so the user can
+   * pair again without restarting the host (the window closes after the first successful pairing).
+   *
+   * Security: opening the window grants nothing on its own. The new one-time code is only printed
+   * by the host terminal, the pairing rate limit is preserved (no reset of failed attempts) and the
+   * window stays time-boxed.
+   */
+  ensurePairingAvailable(): { reopened: boolean; code: string } {
+    if (this.isPairingOpen()) return { reopened: false, code: this.#pairingCode };
+    this.#pairingCode = generatePairingCode();
+    this.#pairingOpen = true;
+    this.#pairingExpiresAt =
+      this.#pairingWindowMs === 0 ? 0 : this.#now() + this.#pairingWindowMs;
+    this.#onPairingWindowOpened?.(this.#pairingCode, 'reopened');
+    return { reopened: true, code: this.#pairingCode };
   }
 
   closePairingWindow(): void {
