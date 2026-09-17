@@ -15,3 +15,5 @@ node dist/cli.js        # directo
 ```
 
 Ver `docs/adr/ADR-002-*`, `ADR-005-*` y `docs/backlog/DS-003.md`, `DS-004.md`.
+
+Trazabilidad: DS-003 (Local Host + bridge loopback).
