@@ -6,3 +6,5 @@ descubrimiento de capabilities, con namespacing. Storybook es un preset del
 adapter de Design System, no una URL obligatoria.
 
 Ver `docs/adr/ADR-003-*`, `ADR-004-*` y `docs/backlog/DS-004.md`, `DS-005.md`.
+
+Trazabilidad: DS-004 (MCP Client Manager stdio + HTTP).
