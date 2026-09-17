@@ -1,47 +1,93 @@
 :root {
   color-scheme: light dark;
-  --ds-border: #d7d7de;
-  --ds-muted: #6b6b76;
+  /* Borders are deliberately gray, not white: they must read as separators, not as content. */
+  --ds-border: #c6c9d1;
+  --ds-border-soft: #dcdee4;
+  --ds-muted: #6b7280;
   --ds-ok: #1f8a4c;
-  --ds-warn: #b26a00;
+  --ds-warn: #a86400;
   --ds-error: #b3261e;
+  --ds-radius: 10px;
+  --ds-radius-sm: 8px;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ds-border: #3b3e46;
+    --ds-border-soft: #2e3138;
+    --ds-muted: #9aa0aa;
+  }
 }
 
 body {
   margin: 0;
-  padding: 16px;
-  font-size: 13px;
-  line-height: 1.45;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .ds-app {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .ds-header h1 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .ds-header p {
-  margin: 2px 0 0;
+  margin: 1px 0 0;
+  font-size: 11px;
   color: var(--ds-muted);
 }
 
+/* --- Tabs ---------------------------------------------------------------- */
+
+.ds-tabs {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--ds-border);
+}
+
+.ds-tab {
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ds-muted);
+  font: inherit;
+  font-size: 11px;
+  padding: 5px 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ds-tab:hover {
+  color: inherit;
+}
+
+.ds-tab--active {
+  color: inherit;
+  font-weight: 600;
+  border-bottom-color: currentColor;
+}
+
+/* --- Cards --------------------------------------------------------------- */
+
 .ds-card {
   border: 1px solid var(--ds-border);
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: var(--ds-radius);
+  padding: 10px;
 }
 
 .ds-card h2 {
-  margin: 0 0 8px;
-  font-size: 13px;
+  margin: 0 0 6px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--ds-muted);
 }
 
@@ -50,13 +96,14 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 4px 0;
+  padding: 3px 0;
 }
 
 .ds-badge {
   border-radius: 999px;
-  padding: 1px 8px;
-  font-size: 11px;
+  padding: 0 6px;
+  font-size: 10px;
+  line-height: 1.6;
   border: 1px solid currentColor;
 }
 
@@ -80,11 +127,14 @@ body {
   color: var(--ds-muted);
 }
 
+/* --- Controls ------------------------------------------------------------ */
+
 .ds-input,
 .ds-button {
   font: inherit;
-  padding: 6px 8px;
-  border-radius: 6px;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--ds-radius-sm);
   border: 1px solid var(--ds-border);
   background: transparent;
   color: inherit;
@@ -101,12 +151,16 @@ body {
 
 .ds-form {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .ds-form .ds-input {
   flex: 1;
+}
+
+/* Pairing codes read better in uppercase; URLs and free text must stay as typed. */
+.ds-form .ds-input:not(.ds-input--plain) {
   text-transform: uppercase;
 }
 
@@ -117,27 +171,83 @@ body {
 }
 
 .ds-note {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
+  font-size: 11px;
   color: var(--ds-muted);
 }
 
-.ds-upcoming {
+.ds-footnote {
+  font-size: 10px;
+}
+
+/* --- Setup guide --------------------------------------------------------- */
+
+.ds-steps {
+  list-style: none;
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
+}
+
+.ds-step {
+  display: flex;
+  gap: 8px;
+  padding: 7px 0;
+  border-top: 1px solid var(--ds-border-soft);
+}
+
+.ds-step:first-child {
+  border-top: none;
+}
+
+.ds-step-index {
+  flex: 0 0 18px;
+  height: 18px;
+  border: 1px solid var(--ds-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
   color: var(--ds-muted);
 }
+
+.ds-step--done .ds-step-index {
+  border-color: var(--ds-ok);
+  color: var(--ds-ok);
+}
+
+.ds-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ds-step-title {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.ds-step-detail {
+  font-size: 11px;
+}
+
+.ds-step-actions {
+  margin-top: 3px;
+}
+
+/* --- Settings ------------------------------------------------------------ */
 
 .ds-settings {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .ds-subsection h3 {
-  margin: 0 0 6px;
-  font-size: 12px;
+  margin: 0 0 4px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--ds-muted);
 }
 
@@ -145,7 +255,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .ds-form--grid .ds-button,
@@ -169,18 +279,20 @@ body {
 
 .ds-button--chip {
   margin: 2px 4px 2px 0;
-  padding: 2px 8px;
-  font-size: 11px;
+  padding: 1px 7px;
+  font-size: 10px;
 }
 
 .ds-select {
   max-width: 62%;
 }
 
+/* --- Review -------------------------------------------------------------- */
+
 .ds-review {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .ds-match-name {
@@ -190,21 +302,21 @@ body {
 .ds-summary {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 4px 0;
+  gap: 5px;
+  margin: 2px 0;
 }
 
 .ds-check-group h3 {
-  margin: 10px 0 4px;
-  font-size: 11px;
+  margin: 8px 0 3px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--ds-muted);
 }
 
 .ds-check {
-  padding: 4px 0;
-  border-top: 1px solid var(--ds-border);
+  padding: 3px 0;
+  border-top: 1px solid var(--ds-border-soft);
 }
 
 .ds-check:first-child {
@@ -212,11 +324,18 @@ body {
 }
 
 .ds-check-detail {
-  font-size: 12px;
+  font-size: 11px;
   overflow-wrap: anywhere;
 }
 
 .ds-review-footer {
-  font-size: 11px;
+  font-size: 10px;
   overflow-wrap: anywhere;
+}
+
+.ds-upcoming {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 11px;
+  color: var(--ds-muted);
 }
