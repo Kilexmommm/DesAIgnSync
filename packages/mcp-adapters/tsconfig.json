@@ -6,5 +6,6 @@
     "tsBuildInfoFile": ".tsbuild/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.ts", ".tsbuild", "dist"],
   "references": [{ "path": "../shared-types" }]
 }
