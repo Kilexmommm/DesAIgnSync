@@ -3,6 +3,8 @@ import { useState, type FormEvent } from 'react';
 import { elementTargetLabel } from '@desaignsync/core';
 import type { McpServerRuntimeStatus } from '@desaignsync/shared-types';
 
+import { ReviewView } from '../review/ReviewView.js';
+import { useProfiles, useReview } from '../review/useReview.js';
 import { useElementPicker } from './useElementPicker.js';
 import { useHostConnection, type HostConnectionSnapshot } from './useHostConnection.js';
 
@@ -23,8 +25,17 @@ const STATE_LABEL: Record<HostConnectionSnapshot['state'], string> = {
 export function App(): React.JSX.Element {
   const { snapshot, busy, pair, refresh, unpair, updateHostUrl, testServer } = useHostConnection();
   const { picking, target, error: pickError, start: startPick, clear: clearPick } = useElementPicker();
+  const { profiles } = useProfiles(snapshot.state === 'connected');
+  const {
+    running: reviewing,
+    result: review,
+    error: reviewError,
+    run: runReview,
+    reset: resetReview
+  } = useReview();
   const [hostUrlInput, setHostUrlInput] = useState('');
   const [pairingCode, setPairingCode] = useState('');
+  const [profileId, setProfileId] = useState('design-qa');
   const [actionError, setActionError] = useState<string | undefined>(undefined);
 
   const effectiveHostUrl = hostUrlInput !== '' ? hostUrlInput : snapshot.hostUrl;
@@ -48,6 +59,11 @@ export function App(): React.JSX.Element {
     } catch (error) {
       setActionError(error instanceof Error ? error.message : 'Cannot use that host URL.');
     }
+  };
+
+  const handleReview = async (): Promise<void> => {
+    if (!target) return;
+    await runReview({ target, profileId });
   };
 
   return (
@@ -168,12 +184,56 @@ export function App(): React.JSX.Element {
             Clear
           </button>
         </div>
+
+        <div className="ds-row">
+          <label className="ds-muted" htmlFor="ds-profile">
+            Profile
+          </label>
+          <select
+            id="ds-profile"
+            className="ds-input ds-select"
+            value={profileId}
+            onChange={(event) => setProfileId(event.target.value)}
+            disabled={profiles.length === 0}
+          >
+            {profiles.length === 0 ? <option value={profileId}>{profileId}</option> : null}
+            {profiles.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name} · {profile.tier}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="ds-row">
+          <button
+            className="ds-button"
+            type="button"
+            disabled={!target || reviewing || snapshot.state !== 'connected'}
+            onClick={() => void handleReview()}
+          >
+            {reviewing ? 'Reviewing...' : 'Review element'}
+          </button>
+          {review ? (
+            <button className="ds-button" type="button" onClick={resetReview}>
+              Clear result
+            </button>
+          ) : null}
+        </div>
+
         <p className="ds-note">
-          Read-only: the page is never modified. Evidence collection, matching and the checklist for
-          this selection arrive with DS-018.
+          Read-only: the page is never modified. Evidence comes from Chrome DevTools MCP; matching, the
+          deterministic rules and the optional AI interpretation run in the Local Host.
         </p>
         {pickError ? <p className="ds-note ds-badge--error">{pickError}</p> : null}
+        {reviewError ? <p className="ds-note ds-badge--error">{reviewError}</p> : null}
       </section>
+
+      {review ? (
+        <section className="ds-card">
+          <ReviewView result={review} />
+        </section>
+      ) : null}
 
       <section className="ds-card">
         <h2>MCP servers</h2>
@@ -194,10 +254,10 @@ export function App(): React.JSX.Element {
       <section className="ds-card">
         <h2>Coming in later waves</h2>
         <ul className="ds-upcoming">
-          <li>Evidence, matching and checklist for the selected element (DS-018)</li>
-          <li>Deterministic rules with tolerances (DS-014, DS-015)</li>
-          <li>Auditable checklist and export (DS-020)</li>
-          <li>Page audit (DS-019) and Ask AI (DS-021)</li>
+          <li>Auditable report export (DS-020)</li>
+          <li>Page audit for the whole viewport (DS-019)</li>
+          <li>Ask AI about this selection (DS-021)</li>
+          <li>Unified settings for MCP, LLM and profiles (DS-028)</li>
         </ul>
       </section>
     </div>

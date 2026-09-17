@@ -126,3 +126,51 @@ body {
   padding-left: 18px;
   color: var(--ds-muted);
 }
+
+.ds-select {
+  max-width: 62%;
+}
+
+.ds-review {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds-match-name {
+  font-weight: 600;
+}
+
+.ds-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.ds-check-group h3 {
+  margin: 10px 0 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ds-muted);
+}
+
+.ds-check {
+  padding: 4px 0;
+  border-top: 1px solid var(--ds-border);
+}
+
+.ds-check:first-child {
+  border-top: none;
+}
+
+.ds-check-detail {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.ds-review-footer {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
