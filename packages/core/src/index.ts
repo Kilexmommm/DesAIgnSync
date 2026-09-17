@@ -41,3 +41,25 @@ export {
   FINDING_STATUSES,
   SHARED_TYPES_VERSION
 } from '@desaignsync/shared-types';
+
+export {
+  CLASS_SIGNAL_WEIGHT_CAP,
+  isHashLikeToken,
+  normalizeClassNames,
+  type ClassNormalizationResult,
+  type ClassToken,
+  type ClassTokenCategory
+} from './evidence/classNormalizer.js';
+
+export {
+  asColor,
+  asNonEmptyString,
+  evidenceCoverage,
+  normalizeElementEvidence,
+  parseBox,
+  parseCssNumber,
+  summarizeEvidence,
+  type EvidenceCoverage,
+  type NormalizeEvidenceOptions,
+  type RawElementSource
+} from './evidence/normalizeElementEvidence.js';
