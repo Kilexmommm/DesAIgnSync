@@ -15,6 +15,7 @@ export * from './common.js';
 export * from './errors.js';
 export * from './evidence.js';
 export * from './design-system.js';
+export * from './matching.js';
 export * from './finding.js';
 export * from './config.js';
 export * from './mcp.js';
