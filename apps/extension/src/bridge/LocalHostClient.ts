@@ -10,6 +10,9 @@ import {
   type McpToolCallOutcome,
   type McpToolCallRequest,
   type PairResponse,
+  type ProfilesResponse,
+  type ReviewRequest,
+  type ReviewResult,
   type SessionInfoResponse,
   type TestMcpServerRequest,
   type TestMcpServerResponse
@@ -62,7 +65,7 @@ export class LocalHostClient {
     this.#token = token;
   }
 
-  async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  async #request<T>(path: string, init: RequestInit = {}, timeoutMs?: number): Promise<T> {
     const headers: Record<string, string> = {
       accept: 'application/json',
       ...(init.body !== undefined ? { 'content-type': 'application/json' } : {}),
@@ -75,7 +78,7 @@ export class LocalHostClient {
       response = await this.#fetch(`${this.baseUrl}${path}`, {
         ...init,
         headers,
-        signal: AbortSignal.timeout(this.#timeoutMs)
+        signal: AbortSignal.timeout(timeoutMs ?? this.#timeoutMs)
       });
     } catch (error) {
       throw new HostRequestError({
@@ -144,6 +147,19 @@ export class LocalHostClient {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+  }
+
+  profiles(): Promise<ProfilesResponse> {
+    return this.#request<ProfilesResponse>(HOST_API_PATHS.profiles);
+  }
+
+  /** Full element review (DS-018). Slow by nature: Chrome MCP + Design System MCP + optional LLM. */
+  review(payload: ReviewRequest): Promise<ReviewResult> {
+    return this.#request<ReviewResult>(
+      HOST_API_PATHS.inspectionReview,
+      { method: 'POST', body: JSON.stringify(payload) },
+      180_000
+    );
   }
 
   /** Subscribes to host events over WS `/events`. Returns an unsubscribe function. */
