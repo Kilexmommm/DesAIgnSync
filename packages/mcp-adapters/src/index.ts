@@ -24,3 +24,15 @@ export type {
 } from '@desaignsync/shared-types';
 
 export { DS_LOGICAL_OPERATIONS } from '@desaignsync/shared-types';
+export { ChromeMCPAdapter, CHROME_LOGICAL_OPERATIONS, CHROME_TOOL_ALIASES } from './chrome-devtools/chrome-mcp-adapter.js';
+export type {
+  ChromeCapabilityReport, ChromeCssStyles, ChromeLogicalOperation, ChromePage,
+  ChromeScreenshot, ChromeSnapshot, ChromeToolOverride
+} from './chrome-devtools/chrome-mcp-adapter.js';
+export { DesignSystemMCPAdapter, DS_TOOL_ALIASES, mergeAliases } from './design-system/design-system-mcp-adapter.js';
+export type { DesignSystemAdapterOptions, DsSearchQuery, DsToolOverrides } from './design-system/design-system-mcp-adapter.js';
+export { StorybookMCPAdapter, STORYBOOK_EXTRA_ALIASES, STORYBOOK_MCP_PRESET_ID, createStorybookAdapter } from './storybook/storybook-mcp-adapter.js';
+export { createManagerGateway } from './mcp-tool-gateway.js';
+export type { ManagerLike, McpToolGateway } from './mcp-tool-gateway.js';
+export { discoverLogicalTools, normalizeToolName, pickArgKey, resolveLogicalTool } from './tool-discovery.js';
+export type { DiscoveredTools, LogicalAliasTable } from './tool-discovery.js';
