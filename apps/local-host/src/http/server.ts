@@ -191,9 +191,14 @@ export async function createHostServer(options: HostServerOptions): Promise<Host
       const token = extractToken(req, url);
       const session = sessions.verify(token);
       if (!session) {
+        // A lost/expired token must not force a host restart (DS-003 UX): reopen the pairing
+        // window so the user can pair again with the code printed by the host terminal.
+        const { reopened } = sessions.ensurePairingAvailable();
         throw new DesaignSyncHostError(
           'UNAUTHORIZED',
-          'Missing or expired session. Pair the extension again from the Side Panel.'
+          reopened
+            ? 'Missing or expired session. A new pairing code was printed by the host terminal; pair the extension again.'
+            : 'Missing or expired session. Pair the extension again from the Side Panel.'
         );
       }
 

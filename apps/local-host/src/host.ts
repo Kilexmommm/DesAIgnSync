@@ -23,8 +23,14 @@ export interface StartLocalHostOptions extends LoadHostConfigOptions {
   servers?: McpServerConfig[];
   /** Connect every `autoStart` server after the API is up. Default: true. */
   connectAutoStart?: boolean;
+  /** Notified when the pairing window reopens at runtime (defaults to printing the code to stdout). */
+  onPairingCode?: (code: string, reason: 'reopened') => void;
   logger?: Logger;
 }
+
+const defaultPairingNotifier = (code: string): void => {
+  process.stdout.write(`\nPairing window reopened. New pairing code: ${code}\n`);
+};
 
 export interface StartedHost {
   readonly server: HostServer;
@@ -51,13 +57,23 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
     options.logger ??
     createLogger({ level: config.logLevel, bindings: { component: 'local-host', version: HOST_VERSION } });
 
+  const events = new EventBus();
+
   const sessions = new SessionStore({
     tokenTtlMs: config.tokenTtlMs,
     pairingWindowMs: config.pairingWindowMs,
-    maxPairingAttempts: config.maxPairingAttempts
+    maxPairingAttempts: config.maxPairingAttempts,
+    onPairingWindowOpened: (code) => {
+      // The pairing code is a bootstrap credential: it goes to stdout (like the boot banner) and
+      // is never written to the structured log, to config files or to any client payload.
+      (options.onPairingCode ?? defaultPairingNotifier)(code, 'reopened');
+      events.publish({
+        type: 'host.pairing-window',
+        ts: new Date().toISOString(),
+        payload: { open: true }
+      });
+    }
   });
-
-  const events = new EventBus();
 
   // Settings persistence (DS-028). Secrets never reach this file, only their references.
   const configStore = new ConfigStore({

@@ -6,11 +6,21 @@ import { SessionStore } from './sessionStore.js';
 let clock = 1_000_000;
 const now = (): number => clock;
 
-const createStore = (overrides: { tokenTtlMs?: number; pairingWindowMs?: number; maxPairingAttempts?: number } = {}) =>
+const createStore = (
+  overrides: {
+    tokenTtlMs?: number;
+    pairingWindowMs?: number;
+    maxPairingAttempts?: number;
+    onPairingWindowOpened?: (code: string, reason: 'reopened') => void;
+  } = {}
+) =>
   new SessionStore({
     tokenTtlMs: overrides.tokenTtlMs ?? 60_000,
     pairingWindowMs: overrides.pairingWindowMs ?? 60_000,
     maxPairingAttempts: overrides.maxPairingAttempts ?? 3,
+    ...(overrides.onPairingWindowOpened
+      ? { onPairingWindowOpened: overrides.onPairingWindowOpened }
+      : {}),
     now
   });
 
@@ -68,6 +78,32 @@ describe('session store (DS-003 pairing + ephemeral tokens)', () => {
     expect(store.verify(issued.token)).toBeUndefined();
     expect(store.revoke(renewed?.token)).toBe(true);
     expect(store.verify(renewed?.token)).toBeUndefined();
+  });
+
+  it('reopens the pairing window on demand (lost/expired token) without resetting rate limits', () => {
+    const opened: string[] = [];
+    const store = createStore({
+      maxPairingAttempts: 3,
+      onPairingWindowOpened: (code, reason) => opened.push(`${reason}:${code}`)
+    });
+    const bootCode = store.pairingCode;
+    store.pair(store.pairingCode);
+    expect(store.isPairingOpen()).toBe(false);
+
+    // Two failed attempts, then a client shows up with an invalid token.
+    expect(() => store.pair('WRONGCOD')).toThrow();
+    expect(() => store.pair('WRONGCOD')).toThrow();
+    const reopened = store.ensurePairingAvailable();
+    expect(reopened.reopened).toBe(true);
+    expect(reopened.code).not.toBe(bootCode);
+    expect(store.isPairingOpen()).toBe(true);
+    expect(opened).toEqual([`reopened:${reopened.code}`]);
+
+    // The rate-limit budget is preserved: this attempt reaches the limit instead of resetting it.
+    expect(() => store.pair('WRONGCOD')).toThrow(/Too many pairing attempts/);
+
+    // Calling it again while the window is open is a no-op.
+    expect(store.ensurePairingAvailable()).toEqual({ reopened: false, code: store.pairingCode });
   });
 
   it('can reopen the pairing window with a fresh code (--pair flag)', () => {
