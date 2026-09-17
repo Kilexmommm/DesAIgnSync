@@ -8,6 +8,7 @@ import {
 } from './config/hostConfig.js';
 import { EventBus } from './http/eventBus.js';
 import { createHostServer, type HostServer } from './http/server.js';
+import { createSecretStore, type SecretStore } from './security/secretStoreFactory.js';
 import { createLogger, type Logger } from './logging/logger.js';
 import { McpClientManager } from './mcp/McpClientManager.js';
 import { getDefaultMcpPresets } from './mcp/presets.js';
@@ -25,6 +26,7 @@ export interface StartedHost {
   readonly server: HostServer;
   readonly mcp: McpClientManager;
   readonly sessions: SessionStore;
+  readonly secrets: SecretStore;
   readonly config: HostRuntimeConfig;
   readonly logger: Logger;
   readonly pairingCode: string;
@@ -49,9 +51,13 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
 
   const events = new EventBus();
 
+  // OS credential store (or documented fallback): API keys and MCP env secrets (DS-009).
+  const secrets = createSecretStore({ dataDir: config.dataDir });
+
   const mcp = new McpClientManager({
     defaultTimeoutMs: config.defaultMcpTimeoutMs,
     logger: logger.child({ scope: 'mcp' }),
+    secretResolver: (ref) => secrets.get(ref),
     onStatusChange: (status: McpServerRuntimeStatus) => {
       const event: HostEvent = {
         type: 'mcp.status',
@@ -96,6 +102,7 @@ export async function startLocalHost(options: StartLocalHostOptions = {}): Promi
     server,
     mcp,
     sessions,
+    secrets,
     config,
     logger,
     pairingCode: sessions.pairingCode,
