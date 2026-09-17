@@ -95,3 +95,39 @@ export {
   type RuleReference,
   type RulesEngineOptions
 } from './rules/rulesEngine.js';
+
+export {
+  ADVANCED_INSTRUCTIONS_MAX_LENGTH,
+  CORE_PROMPT_FINGERPRINT,
+  CORE_PROMPT_VERSION,
+  CORE_SYSTEM_PROMPT,
+  DEFAULT_ADVANCED_INSTRUCTIONS,
+  fingerprint,
+  resolveAdvancedInstructions,
+  restoreDefaultAdvancedInstructions,
+  validateAdvancedInstructions,
+  type AdvancedInstructionsSource,
+  type AdvancedInstructionsValidation,
+  type ResolvedAdvancedInstructions
+} from './prompts/corePrompt.js';
+
+export {
+  PROMPT_BUNDLE_VERSION,
+  REVIEW_RESPONSE_SCHEMA,
+  UNTRUSTED_CLOSE,
+  UNTRUSTED_OPEN,
+  buildPromptBundle,
+  reconcileFindings,
+  sanitizeUntrustedText,
+  validateLlmReviewResponse,
+  wrapUntrustedBlock,
+  type LlmReviewFinding,
+  type LlmReviewResponse,
+  type LlmReviewValidation,
+  type PromptBundle,
+  type PromptBundleInput,
+  type PromptSection,
+  type PromptSectionId,
+  type ReconciliationConflict,
+  type ReconciliationResult
+} from './prompts/promptBundle.js';
