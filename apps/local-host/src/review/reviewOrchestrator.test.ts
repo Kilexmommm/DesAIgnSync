@@ -193,6 +193,22 @@ describe('review orchestrator (DS-018 vertical slice, real fixtures only)', () =
     expect(accessibility.findings.some((finding) => finding.ruleId === 'dimensions.height')).toBe(false);
   });
 
+  it('falls back to matching the page by URL when the picker tab id is not an MCP page id', async () => {
+    const host = await startTestHost({ withDesignSystem: true });
+
+    const result = await host.review.review({
+      target: { ...target, tabId: 'chrome-tab-42', url: 'https://example.test/' },
+      inspectionMcpId: 'chrome-fixture',
+      designSystemMcpId: 'ds-fixture',
+      profileId: 'design-qa',
+      options: { includeLlm: false }
+    });
+
+    expect(result.warnings.join(' ')).toContain('could not be selected directly');
+    expect(result.evidence.tagName).toBe('button');
+    expect(result.match.outcome).toBe('primary');
+  });
+
   it('rejects an invalid element target at the HTTP boundary', async () => {
     const host = await startTestHost({ withDesignSystem: false });
 
