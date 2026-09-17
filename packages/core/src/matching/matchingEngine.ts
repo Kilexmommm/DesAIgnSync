@@ -16,6 +16,7 @@ import {
 } from '@desaignsync/shared-types';
 
 import { CLASS_SIGNAL_WEIGHT_CAP } from '../evidence/classNormalizer.js';
+import { colorsEqual, firstFontFamily } from '../shared/css.js';
 
 /**
  * Deterministic matching engine (DS-014, spec v2.1 §12).
@@ -108,40 +109,8 @@ const numericCloseness = (observed: number, expected: number): number => {
   return clamp01(1 - difference / scale);
 };
 
-const normalizeColor = (value: string): string =>
-  value.trim().toLowerCase().replace(/\s+/g, '').replace(/^rgba?\(/, 'rgb(');
-
-const colorCloseness = (observed: string, expected: string): number => {
-  const left = normalizeColor(observed);
-  const right = normalizeColor(expected);
-  if (left === right) return 1;
-  const hexLeft = toHex(left);
-  const hexRight = toHex(right);
-  if (hexLeft && hexRight && hexLeft === hexRight) return 1;
-  return 0;
-};
-
-const toHex = (value: string): string | undefined => {
-  const short = /^#([0-9a-f]{3})$/i.exec(value);
-  if (short?.[1]) {
-    return `#${short[1]
-      .split('')
-      .map((char) => `${char}${char}`)
-      .join('')}`;
-  }
-  const full = /^#([0-9a-f]{6})$/i.exec(value);
-  if (full?.[1]) return `#${full[1]}`;
-  const rgb = /^rgb\((\d{1,3}),(\d{1,3}),(\d{1,3})\)$/i.exec(value);
-  if (rgb) {
-    return `#${[rgb[1], rgb[2], rgb[3]]
-      .map((part) => Number.parseInt(part ?? '0', 10).toString(16).padStart(2, '0'))
-      .join('')}`;
-  }
-  return undefined;
-};
-
-const firstFontFamily = (value: string): string =>
-  value.split(',')[0]?.trim().replace(/^['"]|['"]$/g, '').toLowerCase() ?? '';
+const colorCloseness = (observed: string, expected: string): number =>
+  colorsEqual(observed, expected) ? 1 : 0;
 
 const boxAverage = (observed: { top: number; right: number; bottom: number; left: number }): number =>
   (observed.top + observed.right + observed.bottom + observed.left) / 4;
