@@ -4,7 +4,9 @@ import { elementTargetLabel } from '@desaignsync/core';
 import type { McpServerRuntimeStatus } from '@desaignsync/shared-types';
 
 import { ReviewView } from '../review/ReviewView.js';
-import { useProfiles, useReview } from '../review/useReview.js';
+import { useReview } from '../review/useReview.js';
+import { SettingsPanel } from '../settings/SettingsPanel.js';
+import { useSettings } from '../settings/useSettings.js';
 import { useElementPicker } from './useElementPicker.js';
 import { useHostConnection, type HostConnectionSnapshot } from './useHostConnection.js';
 
@@ -25,7 +27,9 @@ const STATE_LABEL: Record<HostConnectionSnapshot['state'], string> = {
 export function App(): React.JSX.Element {
   const { snapshot, busy, pair, refresh, unpair, updateHostUrl, testServer } = useHostConnection();
   const { picking, target, error: pickError, start: startPick, clear: clearPick } = useElementPicker();
-  const { profiles } = useProfiles(snapshot.state === 'connected');
+  const settings = useSettings(snapshot.state === 'connected');
+  const profiles = settings.profiles;
+  const [showSettings, setShowSettings] = useState(false);
   const {
     running: reviewing,
     result: review,
@@ -247,8 +251,30 @@ export function App(): React.JSX.Element {
           </ul>
         )}
         <p className="ds-note">
-          Adding and editing MCP servers arrives with DS-028. Test connection is available now.
+          Add, edit, test and remove MCP servers, LLM providers and profiles in Settings below.
         </p>
+      </section>
+
+      <section className="ds-card">
+        <div className="ds-row">
+          <h2>Settings</h2>
+          <button className="ds-button" type="button" onClick={() => setShowSettings(!showSettings)}>
+            {showSettings ? 'Hide' : 'Open'}
+          </button>
+        </div>
+        <p className="ds-note">
+          Secrets are stored by the Local Host credential store and never returned to this panel.
+        </p>
+        {showSettings ? (
+          <SettingsPanel
+            settings={settings}
+            servers={snapshot.servers}
+            busy={busy}
+            onTestServer={testServer}
+            activeProfileId={profileId}
+            onSelectProfile={setProfileId}
+          />
+        ) : null}
       </section>
 
       <section className="ds-card">
@@ -257,7 +283,7 @@ export function App(): React.JSX.Element {
           <li>Auditable report export (DS-020)</li>
           <li>Page audit for the whole viewport (DS-019)</li>
           <li>Ask AI about this selection (DS-021)</li>
-          <li>Unified settings for MCP, LLM and profiles (DS-028)</li>
+          <li>Privacy controls and prompt-injection hardening (DS-022)</li>
         </ul>
       </section>
     </div>

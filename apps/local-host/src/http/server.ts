@@ -20,9 +20,16 @@ import {
   type PairRequest,
   type PairResponse,
   type ProfilesResponse,
+  type RemoveLlmProviderRequest,
+  type RemoveLlmProviderResponse,
+  type RemoveMcpServerRequest,
+  type RemoveMcpServerResponse,
+  type RemoveProfileRequest,
+  type RemoveProfileResponse,
   type ReviewRequest,
   type ReviewResult,
   type SaveLlmProviderRequest,
+  type SaveProfileRequest,
   type SessionInfoResponse,
   type TestLlmProviderRequest,
   type TestLlmProviderResponse,
@@ -32,6 +39,7 @@ import {
 import { normalizeElementTarget } from '@desaignsync/core';
 
 import { HOST_VERSION, type HostRuntimeConfig } from '../config/hostConfig.js';
+import type { ConfigStore } from '../config/configStore.js';
 import type { Logger } from '../logging/logger.js';
 import type { McpClientManager } from '../mcp/McpClientManager.js';
 import type { LlmProviderRegistry } from '../llm/providerRegistry.js';
@@ -51,6 +59,8 @@ export interface HostServerOptions {
   providers?: LlmProviderRegistry;
   profiles?: ProfileRegistry;
   review?: ReviewOrchestrator;
+  /** Settings persistence (DS-028). Optional so tests can run fully in-memory. */
+  configStore?: ConfigStore;
   onShutdownRequested?: () => void;
 }
 
@@ -278,7 +288,20 @@ export async function createHostServer(options: HostServerOptions): Promise<Host
       mcp.upsertServer(validated);
       const connect = payload['connect'] === true;
       const status = connect ? await mcp.connect(validated.id) : mcp.getStatus(validated.id);
+      options.configStore?.saveMcpServers(mcp.listConfigs());
       writeJson(res, 200, { status: status ?? undefined }, req);
+      return;
+    }
+
+    if (path === HOST_API_PATHS.mcpServersRemove && method === 'POST') {
+      const payload = asRecord(await readJsonBody(req, config)) as unknown as RemoveMcpServerRequest;
+      if (typeof payload.serverId !== 'string' || payload.serverId === '') {
+        throw new DesaignSyncHostError('BAD_REQUEST', 'serverId is required.');
+      }
+      await mcp.removeServer(payload.serverId);
+      options.configStore?.saveMcpServers(mcp.listConfigs());
+      const body: RemoveMcpServerResponse = { removed: true };
+      writeJson(res, 200, body, req);
       return;
     }
 
@@ -314,7 +337,21 @@ export async function createHostServer(options: HostServerOptions): Promise<Host
       const provider = await registry.save(payload);
       // Only the safe projection leaves the host: the API key stays in the credential store.
       const saved = registry.describe().find((entry) => entry.id === provider.id);
+      options.configStore?.saveLlmProviders(registry.list());
       writeJson(res, 200, { provider: saved ?? undefined }, req);
+      return;
+    }
+
+    if (path === HOST_API_PATHS.llmProvidersRemove && method === 'POST') {
+      const payload = asRecord(await readJsonBody(req, config)) as unknown as RemoveLlmProviderRequest;
+      if (typeof payload.providerId !== 'string' || payload.providerId === '') {
+        throw new DesaignSyncHostError('BAD_REQUEST', 'providerId is required.');
+      }
+      const registry = requireProviders(options);
+      const removed = await registry.remove(payload.providerId);
+      options.configStore?.saveLlmProviders(registry.list());
+      const body: RemoveLlmProviderResponse = { removed };
+      writeJson(res, 200, body, req);
       return;
     }
 
@@ -352,6 +389,37 @@ export async function createHostServer(options: HostServerOptions): Promise<Host
 
     if (path === HOST_API_PATHS.profiles && method === 'GET') {
       const body: ProfilesResponse = { profiles: options.profiles?.describe() ?? [] };
+      writeJson(res, 200, body, req);
+      return;
+    }
+
+    if (path === HOST_API_PATHS.profilesSave && method === 'POST') {
+      const payload = asRecord(await readJsonBody(req, config)) as unknown as SaveProfileRequest;
+      const registry = requireProfiles(options);
+      registry.upsert(payload.profile);
+      options.configStore?.saveProfiles(registry.list());
+      writeJson(res, 200, { saved: true }, req);
+      return;
+    }
+
+    if (path === HOST_API_PATHS.profilesRemove && method === 'POST') {
+      const payload = asRecord(await readJsonBody(req, config)) as unknown as RemoveProfileRequest;
+      if (typeof payload.profileId !== 'string' || payload.profileId === '') {
+        throw new DesaignSyncHostError('BAD_REQUEST', 'profileId is required.');
+      }
+      const registry = requireProfiles(options);
+      const target = registry.get(payload.profileId);
+      const removed = registry.remove(payload.profileId);
+      options.configStore?.saveProfiles(registry.list());
+      const body: RemoveProfileResponse = removed
+        ? { removed }
+        : {
+            removed,
+            reason:
+              target?.isBuiltIn === true
+                ? 'Built-in profiles cannot be removed; reset them to their template instead.'
+                : 'Unknown profile.'
+          };
       writeJson(res, 200, body, req);
       return;
     }
@@ -520,6 +588,13 @@ const requireProviders = (options: HostServerOptions): LlmProviderRegistry => {
     throw new DesaignSyncHostError('HOST_NOT_READY', 'The LLM provider registry is not available.');
   }
   return options.providers;
+};
+
+const requireProfiles = (options: HostServerOptions): ProfileRegistry => {
+  if (options.profiles === undefined) {
+    throw new DesaignSyncHostError('HOST_NOT_READY', 'The validation profile registry is not available.');
+  }
+  return options.profiles;
 };
 
 /** Validates an MCP server config coming from the Side Panel (never trusts the payload). */

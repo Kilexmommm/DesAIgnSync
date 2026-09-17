@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ProfilesResponse, ReviewRequest, ReviewResult } from '@desaignsync/shared-types';
+import type { ReviewRequest, ReviewResult } from '@desaignsync/shared-types';
 
 import { HostRequestError, LocalHostClient } from '../bridge/LocalHostClient.js';
 import { getHostUrl, getSessionToken } from '../bridge/extensionStorage.js';
@@ -54,26 +54,3 @@ export function useReview(): ReviewHookState & {
 }
 
 /** Loads the available validation profiles (DS-017) so the user can pick one before reviewing. */
-export function useProfiles(enabled: boolean): { profiles: ProfilesResponse['profiles'] } {
-  const [profiles, setProfiles] = useState<ProfilesResponse['profiles']>([]);
-
-  useEffect(() => {
-    if (!enabled) return undefined;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const client = await buildClient();
-        if (!client.token) return;
-        const response = await client.profiles();
-        if (!cancelled) setProfiles(response.profiles);
-      } catch {
-        // The panel keeps its default profile when the catalog cannot be read.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled]);
-
-  return { profiles };
-}

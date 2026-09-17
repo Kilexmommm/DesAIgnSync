@@ -127,6 +127,44 @@ body {
   color: var(--ds-muted);
 }
 
+.ds-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ds-subsection h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ds-muted);
+}
+
+.ds-form--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ds-form--grid .ds-button,
+.ds-form--grid .ds-inline {
+  grid-column: span 2;
+}
+
+.ds-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ds-button--chip {
+  margin: 2px 4px 2px 0;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
 .ds-select {
   max-width: 62%;
 }

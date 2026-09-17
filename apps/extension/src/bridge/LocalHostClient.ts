@@ -6,16 +6,28 @@ import {
   type HostErrorCode,
   type HostEvent,
   type HostInfoResponse,
+  type LlmModelsResponse,
+  type LlmProvidersResponse,
+  type McpServerConfig,
+  type McpServerRuntimeStatus,
   type McpServersResponse,
   type McpToolCallOutcome,
   type McpToolCallRequest,
   type PairResponse,
   type ProfilesResponse,
+  type RemoveLlmProviderResponse,
+  type RemoveMcpServerResponse,
+  type RemoveProfileResponse,
   type ReviewRequest,
   type ReviewResult,
+  type SaveLlmProviderRequest,
+  type SaveProfileResponse,
   type SessionInfoResponse,
+  type TestLlmProviderRequest,
+  type TestLlmProviderResponse,
   type TestMcpServerRequest,
-  type TestMcpServerResponse
+  type TestMcpServerResponse,
+  type ValidationProfile
 } from '@desaignsync/shared-types';
 
 export interface LocalHostClientOptions {
@@ -146,6 +158,68 @@ export class LocalHostClient {
     return this.#request<McpToolCallOutcome>(HOST_API_PATHS.mcpToolsCall, {
       method: 'POST',
       body: JSON.stringify(payload)
+    });
+  }
+
+  /* --- Settings mutations (DS-028). The panel never sees an API key coming back. --- */
+
+  saveServer(server: McpServerConfig, connect = false): Promise<{ status?: McpServerRuntimeStatus }> {
+    return this.#request<{ status?: McpServerRuntimeStatus }>(HOST_API_PATHS.mcpServers, {
+      method: 'POST',
+      body: JSON.stringify({ server, connect })
+    });
+  }
+
+  removeServer(serverId: string): Promise<RemoveMcpServerResponse> {
+    return this.#request<RemoveMcpServerResponse>(HOST_API_PATHS.mcpServersRemove, {
+      method: 'POST',
+      body: JSON.stringify({ serverId })
+    });
+  }
+
+  providers(): Promise<LlmProvidersResponse> {
+    return this.#request<LlmProvidersResponse>(HOST_API_PATHS.llmProviders);
+  }
+
+  saveProvider(input: SaveLlmProviderRequest): Promise<{ provider?: LlmProvidersResponse['providers'][number] }> {
+    return this.#request<{ provider?: LlmProvidersResponse['providers'][number] }>(HOST_API_PATHS.llmProviders, {
+      method: 'POST',
+      body: JSON.stringify(input)
+    });
+  }
+
+  removeProvider(providerId: string): Promise<RemoveLlmProviderResponse> {
+    return this.#request<RemoveLlmProviderResponse>(HOST_API_PATHS.llmProvidersRemove, {
+      method: 'POST',
+      body: JSON.stringify({ providerId })
+    });
+  }
+
+  testProvider(payload: TestLlmProviderRequest): Promise<TestLlmProviderResponse> {
+    return this.#request<TestLlmProviderResponse>(HOST_API_PATHS.llmProvidersTest, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  providerModels(payload: TestLlmProviderRequest): Promise<LlmModelsResponse> {
+    return this.#request<LlmModelsResponse>(HOST_API_PATHS.llmProvidersModels, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  saveProfile(profile: ValidationProfile): Promise<SaveProfileResponse> {
+    return this.#request<SaveProfileResponse>(HOST_API_PATHS.profilesSave, {
+      method: 'POST',
+      body: JSON.stringify({ profile })
+    });
+  }
+
+  removeProfile(profileId: string): Promise<RemoveProfileResponse> {
+    return this.#request<RemoveProfileResponse>(HOST_API_PATHS.profilesRemove, {
+      method: 'POST',
+      body: JSON.stringify({ profileId })
     });
   }
 

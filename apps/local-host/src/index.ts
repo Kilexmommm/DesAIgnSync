@@ -16,6 +16,7 @@ export {
   type LoadHostConfigOptions,
   type LogLevel
 } from './config/hostConfig.js';
+export { ConfigStore, HOST_CONFIG_FILE_VERSION } from './config/configStore.js';
 export { createLogger, type Logger, type CreateLoggerOptions } from './logging/logger.js';
 export { McpClientManager, toHostError, type McpManagerOptions } from './mcp/McpClientManager.js';
 export { McpClient, type McpClientOptions, type McpToolCallResult } from './mcp/mcpClient.js';

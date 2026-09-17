@@ -17,11 +17,15 @@ export const HOST_API_PATHS = {
   events: '/events',
   mcpServers: '/mcp/servers',
   mcpServersTest: '/mcp/servers/test',
+  mcpServersRemove: '/mcp/servers/remove',
   mcpToolsCall: '/mcp/tools/call',
   llmProviders: '/llm/providers',
   llmProvidersTest: '/llm/providers/test',
   llmProvidersModels: '/llm/providers/models',
+  llmProvidersRemove: '/llm/providers/remove',
   profiles: '/profiles',
+  profilesSave: '/profiles/save',
+  profilesRemove: '/profiles/remove',
   inspectionStart: '/inspection/start',
   inspectionSnapshot: '/inspection/snapshot',
   inspectionScreenshot: '/inspection/screenshot',
@@ -81,6 +85,14 @@ export interface ApiErrorResponse {
 
 export interface McpServersResponse {
   servers: McpServerRuntimeStatus[];
+}
+
+export interface RemoveMcpServerRequest {
+  serverId: string;
+}
+
+export interface RemoveMcpServerResponse {
+  removed: boolean;
 }
 
 export interface TestMcpServerRequest {
