@@ -7,7 +7,7 @@ durable: sirve para retomar el trabajo sin releer la conversación completa.
 ## Verificación actual
 
 - `npm run typecheck` → **exit 0**
-- `npx vitest run` → **135 tests / 20 suites, 0 fallos** (fixtures MCP y LLM **reales**, sin mocks)
+- `npx vitest run` → **152 tests / 23 suites, 0 fallos** (fixtures MCP y LLM **reales**, sin mocks)
 - `npm run extension:build` → `apps/extension/dist` (sidepanel.js + service-worker.js + manifest MV3)
 - `node apps/local-host/bin/desaignsync-host.mjs --version` → `0.1.0`
 
@@ -18,6 +18,7 @@ durable: sirve para retomar el trabajo sin releer la conversación completa.
 | 1 — Foundation | DS-001..004 | ✅ mergeado | monorepo npm workspaces + TS project references; MV3 Side Panel; Local MCP Host (`/health`, pairing con rate-limit, API autenticada, WS `/events`); `McpClientManager` stdio + streamable-http con restart/backoff y sin huérfanos |
 | 2 — Connections | DS-005..009 | ✅ mergeado | `ChromeMCPAdapter`, `DesignSystemMCPAdapter` (5 operaciones lógicas §11.1), preset Storybook; `LlmProviderAdapter` OpenAI-compatible; `SecretStore` (keychain del SO + fallback AES-256-GCM) |
 | 3 — Evidence | DS-010..013 | ✅ mergeado | `normalizeElementEvidence` + `evidenceCoverage`; `classNormalizer` con pesos y `CLASS_SIGNAL_WEIGHT_CAP`; `toComponentSignature` (+`providedFields`/`derivedFields`); picker read-only con permisos opcionales |
+| 5 — Vertical slice | DS-018 (+ APIs DS-008/DS-017) | ✅ mergeado | `ReviewOrchestrator` (Chrome MCP → evidencia → DS MCP → firmas → matching → reglas → LLM opcional → `ReviewResult`); `elementEvidenceCollector` read-only (sin `value` ni atributos fuera de allowlist); resolución de página por id con fallback por URL; endpoints `/inspection/review`, `/llm/providers*`, `/profiles`; `LlmProviderRegistry` y `ProfileRegistry` |
 | 4 — Intelligence | DS-014..017 | ✅ mergeado | `matchElement`/`MatchingEngine` (9 señales, pesos de §12, tope 10% a clases, `MIN_EVIDENCE_COVERAGE`, `no-reliable-match`); `evaluateRules` con 22 checks y tolerancias ±2px/±1px; `CORE_SYSTEM_PROMPT` protegido + `buildPromptBundle`/`reconcileFindings`; 6 perfiles y modos Simple/Advanced/Expert |
 
 Commits por historia en `main`: `2b6a8be` (DS-011), `310f44d` (DS-010), `ada69a4` (DS-013),
@@ -25,7 +26,9 @@ Commits por historia en `main`: `2b6a8be` (DS-011), `310f44d` (DS-010), `ada69a4
 
 ## Pendiente
 
-**Wave 5 — Vertical slice (milestone)**: `DS-018` (`select → Chrome MCP → evidence → DS MCP → matching → rules → LLM → checklist`), `DS-019`, `DS-020`, `DS-022`, `DS-028`.
+**Wave 5 (resto)**: `DS-019` (page audit), `DS-020` (reporting/checklist UI + export), `DS-022` (privacidad/prompt-injection), `DS-028` (Settings UI: MCP + LLM + perfiles en el Side Panel).
+
+**Nota de milestone**: el slice vertical ya funciona en el host con fixtures reales (6 tests e2e). Lo que falta para la experiencia completa es cablear el Side Panel al endpoint `/inspection/review` y renderizar match + checklist + interpretación (DS-028 / UI de Inspect). El picker (DS-012) ya produce el `ElementTarget`.
 **Waves 6-7**: `DS-021`, `DS-023`, `DS-024`, `DS-025`, `DS-026`, `DS-027`, `DS-029`, `DS-030`.
 
 ## Decisiones y discrepancias documentadas
@@ -45,7 +48,8 @@ Commits por historia en `main`: `2b6a8be` (DS-011), `310f44d` (DS-010), `ada69a4
 ## Estado del repo
 
 - Ramas locales/remotas: `main` + `feature/ds-001..ds-017` (todas mergeadas a `main`).
-- Interfaz interna del host (§18) implementada: `/health`, `/info`, `/session/pair|renew`, `/mcp/servers`, `/mcp/servers/test`, `/mcp/tools/call`, WS `/events`. Falta cablear `/llm/providers*`, `/inspection/*` y `/reports/export` cuando existan sus consumidores (Wave 5).
+- Interfaz interna del host (§18) implementada: `/health`, `/info`, `/session/pair|renew`, `/mcp/servers`, `/mcp/servers/test`, `/mcp/tools/call`, WS `/events`, `/llm/providers` (GET/POST), `/llm/providers/test`, `/llm/providers/models`, `/profiles`, `/inspection/review`. Falta `/inspection/snapshot|screenshot` y `/reports/export` (Wave 5-6).
+- Secretos: `DESAIGNSYNC_SECRET_BACKEND=file` fuerza el fallback cifrado (CI/headless); el backend del keychain del SO ahora usa `spawn` + stdin con timeout de 10s (antes `execFile` no enviaba el secreto y bloqueaba).
 - Sin labels/milestones en los GitHub Issues (el board "DesAIgnSync (Todo)" existe).
 - Nota: otra sesión/agente ha estado tocando `packages/ui/` en paralelo (timestamps recientes);
   sigue sin trackear y sus scripts de Storybook se revirtieron de `package.json`.
