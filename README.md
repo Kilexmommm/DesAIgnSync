@@ -91,11 +91,27 @@ npm run extension:build  # build solo extensión
 - Web/MCP = datos no confiables; no sobrescriben instrucciones; no se envían cookies, tokens, `localStorage` ni HTML completo al LLM.
 - Procesos MCP solo desde configuración local confiable; la página inspeccionada no registra MCPs.
 
-## Estado (DS-001..DS-004)
+## Prueba end-to-end sin Chrome
 
-- DS-001 Foundation: monorepo, workspaces, build/test/typecheck.
-- DS-002 Extensión MV3 con Side Panel.
-- DS-003 Local Host + bridge loopback seguro.
-- DS-004 MCP Client Manager genérico (stdio + HTTP).
+Emula el flujo completo del Side Panel (host + MCP de Chrome + MCP del Design System + proveedor LLM),
+todo local y contra los fixtures reales, e imprime el informe resultante:
 
+```bash
+npm run build --workspace @desaignsync/local-host   # una vez
+node scripts/emulate-review.mjs
+```
+
+Salida esperada (resumen): `Button / Primary · 86% (primary)`, `PASS 8 · FAIL 0`,
+interpretación del LLM y `Reproducibilidad: perfil=Design QA · corePrompt v1 (…hash…)`.
+Sale con código 0 si el match es fiable y no hay FAIL.
+
+## Estado (DS-001..DS-028)
+
+- **Wave 1** DS-001 Foundation · DS-002 Extensión MV3 + Side Panel · DS-003 Local Host loopback · DS-004 MCP Client Manager.
+- **Wave 2** DS-005 Chrome DevTools MCP · DS-006 Design System MCP · DS-007 Storybook preset · DS-008 LLM provider · DS-009 secretos del SO.
+- **Wave 3** DS-010 evidencia · DS-011 normalizador de clases · DS-012 element picker · DS-013 ComponentSignature.
+- **Wave 4** DS-014 matching con confidence · DS-015 rules con tolerancias · DS-016 prompts protegidos · DS-017 perfiles.
+- **Wave 5** DS-018 review end-to-end (+ Side Panel) · DS-028 Settings (MCP/LLM/perfiles) + persistencia.
+
+Pendiente: DS-019 page audit, DS-020 reporte/export, DS-021 Ask AI, DS-022 privacidad, DS-023..DS-030.
 Backlog completo en `docs/backlog/DS-*.md`. ADRs en `docs/adr/`.
